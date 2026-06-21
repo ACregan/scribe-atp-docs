@@ -3,4 +3,113 @@ title: Quickstart
 description: Fetch a Scribe site and article in under 5 minutes using @scribe-atp/core.
 ---
 
-Coming soon.
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're using React, Angular, Vue, Next.js, Nuxt, or React Router, the [Framework Guides](/developers/framework-guides/core) wrap these same functions with framework-idiomatic APIs.
+
+<Steps>
+
+1. **Install the package**
+
+   <Tabs>
+     <TabItem label="npm">
+       ```bash
+       npm install @scribe-atp/core
+       ```
+     </TabItem>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add @scribe-atp/core
+       ```
+     </TabItem>
+     <TabItem label="yarn">
+       ```bash
+       yarn add @scribe-atp/core
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Fetch a site**
+
+   A site is identified by two things: the author's handle (or DID) and the site slug. The site slug is derived from the author's domain using `toSlug`.
+
+   ```ts
+   import { fetchSite, toSlug } from '@scribe-atp/core';
+
+   const author = 'anthonycregan.dev';
+   const site = await fetchSite(author, toSlug('anthonycregan.co.uk'));
+
+   console.log(site.title);
+   console.log(site.description);
+
+   // Published articles, organised into groups
+   for (const group of site.groups) {
+     console.log(group.title);
+     for (const article of group.articles) {
+       console.log(article.title, article.url);
+     }
+   }
+
+   // Unpublished articles (not yet assigned to a group)
+   console.log(site.ungroupedArticles);
+   ```
+
+   <Aside type="tip">
+     `toSlug` derives the site slug from a domain by replacing `.` with `-`:
+     `toSlug("norobots.blog")` → `"norobots-blog"`.
+     The slug matches the rkey the author used when creating the site in Scribe CMS.
+   </Aside>
+
+3. **Fetch an article**
+
+   Once you have an article slug (from the site's `ArticleRef` list or directly), fetch the full article including HTML content:
+
+   ```ts
+   import { fetchArticle } from '@scribe-atp/core';
+
+   const article = await fetchArticle('anthonycregan.dev', 'my-first-post');
+
+   console.log(article.title);
+   console.log(article.synopsis);
+   console.log(article.content); // Full HTML — safe to render directly
+   console.log(article.createdAt);
+   ```
+
+   The `content` field is sanitised HTML produced by Scribe CMS's editor. You can render it with `dangerouslySetInnerHTML` in React, `innerHTML` in Vue, or `[innerHTML]` in Angular.
+
+4. **Build URLs for articles**
+
+   Use the site's `url` and `urlPrefix` fields to construct canonical article URLs:
+
+   ```ts
+   function articleUrl(site: Site, groupSlug: string, articleSlug: string): string {
+     const base = site.urlPrefix
+       ? `https://${site.url}/${site.urlPrefix}`
+       : `https://${site.url}`;
+     return `${base}/${groupSlug}/${articleSlug}`;
+   }
+   ```
+
+5. **Cancel in-flight requests**
+
+   Both `fetchSite` and `fetchArticle` accept an optional `AbortSignal` as a third argument. Pass `request.signal` in server contexts or an `AbortController` signal in client code:
+
+   ```ts
+   const controller = new AbortController();
+
+   const site = await fetchSite(author, siteSlug, controller.signal);
+
+   // Cancel the request if needed (e.g. component unmount, route change)
+   controller.abort();
+   ```
+
+   Framework adapters wire this up automatically — you only need to manage the signal manually when using `@scribe-atp/core` directly.
+
+</Steps>
+
+## What's next?
+
+- Use a **framework adapter** for idiomatic integration with your stack → [Framework Guides](/developers/framework-guides/core)
+- Add an **RSS feed** to your site → [RSS feeds](/developers/guides/rss)
+- Generate a **sitemap** → [Sitemaps](/developers/guides/sitemaps)
+- See the full **API reference** → [`@scribe-atp/core`](/developers/api-reference/core)
