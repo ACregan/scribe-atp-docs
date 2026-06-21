@@ -1,40 +1,47 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: Scribe ATP
+description: Open-source publishing tools built on the AT Protocol. Write once, power any website.
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  tagline: Write once. Power any website. Own your content.
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Developer docs
+      link: /developers/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: Open Scribe CMS
+      link: https://scribe-cms.app
       icon: external
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## What is Scribe ATP?
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+Scribe ATP is an open-source publishing stack built on the [AT Protocol](https://atproto.com) — the same open protocol that powers Bluesky. Your content lives in your own account and can power any number of websites simultaneously.
+
+<CardGrid>
+  <Card title="Scribe CMS" icon="pencil">
+    The writing tool. Compose articles, organise them into sites and groups, and control what's published — at [scribe-cms.app](https://scribe-cms.app).
+  </Card>
+  <Card title="Scribe SDK" icon="puzzle">
+    The developer toolkit. TypeScript packages for React, Angular, Vue, Next.js, Nuxt, React Router, and plain TypeScript. Fetch your content in minutes.
+  </Card>
+  <Card title="For authors" icon="open-book">
+    Write and publish without handing your content to a third-party platform. You own everything — no lock-in.
+  </Card>
+  <Card title="For developers" icon="laptop">
+    One SDK, any framework. Add content to an existing site or build a new one from scratch. Full TypeScript support throughout.
+  </Card>
+</CardGrid>
+
+## Get started
+
+<CardGrid>
+  <Card title="I'm a developer" icon="rocket">
+    Read the [Developer Introduction](/developers/) to understand what the SDK does and which package to install. Then follow the [Quickstart](/developers/quickstart) to fetch your first content in under 5 minutes.
+  </Card>
+  <Card title="I'm an author" icon="star">
+    Read the [Author Introduction](/authors/) to understand how Sites, Groups, and Articles fit together. Then follow [Getting Started](/authors/getting-started) to create your first site and publish your first article.
+  </Card>
 </CardGrid>
