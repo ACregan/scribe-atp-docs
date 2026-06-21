@@ -1,6 +1,54 @@
 ---
 title: Introduction
-description: An overview of the Scribe ATP SDK for developers.
+description: What the Scribe ATP SDK is, who it is for, and which package to install.
 ---
 
-Coming soon.
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+The **Scribe ATP SDK** is a TypeScript library for reading content published with [Scribe CMS](https://scribe-cms.app). Authors write and publish their content in Scribe CMS; the SDK is for developers who want to display that content in their own sites and applications.
+
+## What it does
+
+Content published in Scribe CMS is stored on the author's AT Protocol Personal Data Server (PDS) — a public, decentralised data store. The SDK handles everything between "I have an author's handle" and "I have their articles":
+
+- Resolving a handle (`alice.bsky.social`) to the author's stable DID
+- Discovering which server hosts the author's data
+- Fetching and normalising site and article records
+- Wiring up request cancellation so you don't have to
+
+## Which package do you need?
+
+<CardGrid>
+  <Card title="@scribe-atp/core" icon="puzzle">
+    Any framework, or no framework. Pure async functions with no runtime dependencies. Start here if you're unsure.
+  </Card>
+  <Card title="@scribe-atp/react" icon="puzzle">
+    React SPA or client-rendered components. Provides `useSite` and `useArticle` hooks.
+  </Card>
+  <Card title="@scribe-atp/react-router-framework" icon="puzzle">
+    React Router v7 framework (server) mode. Loader factories that wire up `request.signal` automatically.
+  </Card>
+  <Card title="@scribe-atp/angular" icon="puzzle">
+    Angular 16+. Provides `ScribeService` (Observable API) and `injectSite` / `injectArticle` (Signals API).
+  </Card>
+  <Card title="@scribe-atp/next" icon="puzzle">
+    Next.js 13+ App Router. Factory for `generateStaticParams` and `generateMetadata`.
+  </Card>
+  <Card title="@scribe-atp/vue" icon="puzzle">
+    Vue 3+. Provides `useScribeSite` and `useScribeArticle` composables.
+  </Card>
+  <Card title="@scribe-atp/nuxt" icon="puzzle">
+    Nuxt 3+. Full Nuxt module with auto-imports and `useAsyncData` integration.
+  </Card>
+</CardGrid>
+
+For **SvelteKit**, **Astro**, or any other meta-framework with server-side data loading, install `@scribe-atp/core` and call `fetchSite` / `fetchArticle` directly in your loaders or server components. See [Other frameworks](/developers/framework-guides/other).
+
+## Requirements
+
+- Node.js 22 or later
+- TypeScript 5.0 or later (optional but recommended — all packages ship full type declarations)
+
+## Next steps
+
+Before diving into code, read [Core Concepts](/developers/core-concepts) to understand the AT Protocol identity model and how Scribe organises Sites, Groups, and Articles. Then follow the [Quickstart](/developers/quickstart) to fetch your first content in under 5 minutes.
