@@ -1,6 +1,136 @@
 ---
-title: next
-description: Using the Scribe ATP SDK with next.
+title: Next.js
+description: Using @scribe-atp/next — a factory for generateStaticParams and generateMetadata in the Next.js App Router.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`@scribe-atp/next` provides a `createScribeSite` factory for the **Next.js 13+ App Router**. It returns ready-made implementations of `generateStaticParams` and `generateMetadata` so you don't have to write them yourself.
+
+## Install
+
+```bash
+npm install @scribe-atp/next
+```
+
+## Setup
+
+Call `createScribeSite` once per site, outside your components:
+
+```ts
+// lib/scribe.ts
+import { createScribeSite } from '@scribe-atp/next';
+
+export const scribe = createScribeSite('alice.bsky.social', 'alice-bsky-social');
+```
+
+## Site index page
+
+```tsx
+// app/blog/page.tsx
+import { scribe } from '@/lib/scribe';
+
+export const generateMetadata = scribe.generateSiteMetadata;
+
+export default async function BlogPage() {
+  const site = await scribe.fetchSite();
+
+  return (
+    <main>
+      <h1>{site.title}</h1>
+      {site.groups.map((group) => (
+        <section key={group.slug}>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.articles.map((article) => (
+              <li key={article.uri}>
+                <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  );
+}
+```
+
+## Group page
+
+```tsx
+// app/blog/[group]/page.tsx
+import { scribe } from '@/lib/scribe';
+
+export const generateStaticParams = scribe.generateGroupParams;
+export const generateMetadata = scribe.generateGroupMetadata;
+
+export default async function GroupPage({ params }: { params: { group: string } }) {
+  const site = await scribe.fetchSite();
+  const group = site.groups.find((g) => g.slug === params.group);
+
+  if (!group) return <p>Not found</p>;
+
+  return (
+    <section>
+      <h1>{group.title}</h1>
+      <ul>
+        {group.articles.map((article) => (
+          <li key={article.uri}>
+            <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+```
+
+## Article page
+
+```tsx
+// app/blog/[group]/[slug]/page.tsx
+import { scribe } from '@/lib/scribe';
+
+export const generateStaticParams = scribe.generateGroupArticleParams;
+export const generateMetadata = scribe.generateArticleMetadata;
+
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const article = await scribe.fetchArticle(params.slug);
+
+  return (
+    <article>
+      <h1>{article.title}</h1>
+      {article.synopsis && <p>{article.synopsis}</p>}
+      <div dangerouslySetInnerHTML={{ __html: article.content }} />
+    </article>
+  );
+}
+```
+
+<Aside type="tip">
+  `generateMetadata` functions produce complete OpenGraph tags by default — `og:title`, `og:description`, and `og:image` (when a splash image is set). You can override individual fields by spreading the result:
+
+  ```ts
+  export async function generateMetadata({ params }) {
+    const base = await scribe.generateArticleMetadata({ params });
+    return { ...base, title: `${base.title} | My Blog` };
+  }
+  ```
+</Aside>
+
+## ISR (Incremental Static Regeneration)
+
+Control revalidation via Next.js route segment config — the SDK does not manage this:
+
+```ts
+// Revalidate every hour
+export const revalidate = 3600;
+```
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/next`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/next';
+```

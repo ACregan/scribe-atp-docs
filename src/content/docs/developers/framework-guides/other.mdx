@@ -1,6 +1,100 @@
 ---
-title: other
-description: Using the Scribe ATP SDK with other.
+title: Other frameworks
+description: Using @scribe-atp/core in SvelteKit, Astro, and any other framework with server-side data loading.
 ---
 
-Coming soon.
+For **SvelteKit**, **Astro**, **Remix**, or any other framework with server-side data loading, install `@scribe-atp/core` and call `fetchSite` / `fetchArticle` directly in your loaders or server components. They are plain async functions that work anywhere JavaScript runs.
+
+## SvelteKit
+
+```ts
+// src/routes/blog/+page.server.ts
+import { fetchSite, toSlug } from '@scribe-atp/core';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ fetch: _, signal }) => {
+  const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'), signal);
+  return { site };
+};
+```
+
+```svelte
+<!-- src/routes/blog/+page.svelte -->
+<script lang="ts">
+  import type { PageData } from './$types';
+  export let data: PageData;
+</script>
+
+<h1>{data.site.title}</h1>
+{#each data.site.groups as group}
+  <section>
+    <h2>{group.title}</h2>
+    <ul>
+      {#each group.articles as article}
+        <li><a href="/blog/{group.slug}/{article.url}">{article.title}</a></li>
+      {/each}
+    </ul>
+  </section>
+{/each}
+```
+
+For article pages, pass the slug from `params`:
+
+```ts
+// src/routes/blog/[group]/[slug]/+page.server.ts
+import { fetchArticle } from '@scribe-atp/core';
+
+export const load = async ({ params, fetch: _ }) => {
+  const article = await fetchArticle('alice.bsky.social', params.slug);
+  return { article };
+};
+```
+
+## Astro
+
+```astro
+---
+// src/pages/blog/index.astro
+import { fetchSite, toSlug } from '@scribe-atp/core';
+
+const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+---
+
+<h1>{site.title}</h1>
+{site.groups.map((group) => (
+  <section>
+    <h2>{group.title}</h2>
+    <ul>
+      {group.articles.map((article) => (
+        <li><a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a></li>
+      ))}
+    </ul>
+  </section>
+))}
+```
+
+For dynamic article pages, use `getStaticPaths`:
+
+```astro
+---
+// src/pages/blog/[group]/[slug].astro
+import { fetchSite, fetchArticle, toSlug, flattenArticles } from '@scribe-atp/core';
+
+export async function getStaticPaths() {
+  const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+  return site.groups.flatMap((group) =>
+    group.articles.map((article) => ({
+      params: { group: group.slug, slug: article.url },
+    }))
+  );
+}
+
+const { slug } = Astro.params;
+const article = await fetchArticle('alice.bsky.social', slug);
+---
+
+<article>
+  <h1>{article.title}</h1>
+  <div set:html={article.content} />
+</article>
+```

@@ -1,6 +1,75 @@
 ---
-title: vue
-description: Using the Scribe ATP SDK with vue.
+title: Vue
+description: Using @scribe-atp/vue — composables for Vue 3 SPA and client-rendered components.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`@scribe-atp/vue` provides `useScribeSite` and `useScribeArticle` composables for Vue 3. Each composable returns reactive refs for `site`/`article`, `loading`, and `error`, and aborts the in-flight request when the component is unmounted.
+
+<Aside>
+  For **Nuxt 3**, use [`@scribe-atp/nuxt`](/developers/framework-guides/nuxt) instead — it wraps these composables with `useAsyncData` for SSR support and auto-imports.
+</Aside>
+
+## Install
+
+```bash
+npm install @scribe-atp/vue
+```
+
+Requires Vue 3 or later.
+
+## `useScribeSite`
+
+```vue
+<script setup lang="ts">
+import { useScribeSite, toSlug } from '@scribe-atp/vue';
+
+const { site, loading, error } = useScribeSite('alice.bsky.social', toSlug('alice.bsky.social'));
+</script>
+
+<template>
+  <p v-if="loading">Loading…</p>
+  <p v-else-if="error">Error: {{ error.message }}</p>
+  <main v-else-if="site">
+    <h1>{{ site.title }}</h1>
+    <section v-for="group in site.groups" :key="group.slug">
+      <h2>{{ group.title }}</h2>
+      <ul>
+        <li v-for="article in group.articles" :key="article.uri">
+          <a :href="`/${group.slug}/${article.url}`">{{ article.title }}</a>
+        </li>
+      </ul>
+    </section>
+  </main>
+</template>
+```
+
+## `useScribeArticle`
+
+```vue
+<script setup lang="ts">
+import { useScribeArticle } from '@scribe-atp/vue';
+
+const props = defineProps<{ author: string; slug: string }>();
+const { article, loading, error } = useScribeArticle(props.author, props.slug);
+</script>
+
+<template>
+  <p v-if="loading">Loading…</p>
+  <p v-else-if="error">Error: {{ error.message }}</p>
+  <article v-else-if="article">
+    <h1>{{ article.title }}</h1>
+    <p v-if="article.synopsis">{{ article.synopsis }}</p>
+    <div v-html="article.content" />
+  </article>
+</template>
+```
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/vue`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/vue';
+```

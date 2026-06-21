@@ -1,6 +1,93 @@
 ---
-title: nuxt
-description: Using the Scribe ATP SDK with nuxt.
+title: Nuxt
+description: Using @scribe-atp/nuxt — a Nuxt 3 module with auto-imports and useAsyncData integration.
 ---
 
-Coming soon.
+`@scribe-atp/nuxt` is a full Nuxt 3 module. It registers `useScribeSite` and `useScribeArticle` as auto-imports and wraps them with `useAsyncData` for SSR-safe data fetching.
+
+## Install
+
+```bash
+npm install @scribe-atp/nuxt
+```
+
+## Register the module
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@scribe-atp/nuxt'],
+});
+```
+
+That's it — `useScribeSite` and `useScribeArticle` are now available in any component or page without importing them.
+
+## `useScribeSite`
+
+```vue
+<!-- pages/blog/index.vue -->
+<script setup lang="ts">
+const { data: site, pending, error } = await useScribeSite(
+  'alice.bsky.social',
+  'alice-bsky-social'
+);
+</script>
+
+<template>
+  <p v-if="pending">Loading…</p>
+  <p v-else-if="error">Error: {{ error.message }}</p>
+  <main v-else-if="site">
+    <h1>{{ site.title }}</h1>
+    <section v-for="group in site.groups" :key="group.slug">
+      <h2>{{ group.title }}</h2>
+      <ul>
+        <li v-for="article in group.articles" :key="article.uri">
+          <NuxtLink :to="`/blog/${group.slug}/${article.url}`">{{ article.title }}</NuxtLink>
+        </li>
+      </ul>
+    </section>
+  </main>
+</template>
+```
+
+## `useScribeArticle`
+
+```vue
+<!-- pages/blog/[group]/[slug].vue -->
+<script setup lang="ts">
+const route = useRoute();
+const { data: article, pending, error } = await useScribeArticle(
+  'alice.bsky.social',
+  route.params.slug as string
+);
+</script>
+
+<template>
+  <p v-if="pending">Loading…</p>
+  <p v-else-if="error">Error: {{ error.message }}</p>
+  <article v-else-if="article">
+    <h1>{{ article.title }}</h1>
+    <p v-if="article.synopsis">{{ article.synopsis }}</p>
+    <div v-html="article.content" />
+  </article>
+</template>
+```
+
+## `useAsyncData` options
+
+Both composables accept an optional third argument that is forwarded to `useAsyncData`:
+
+```ts
+const { data: site } = await useScribeSite('alice.bsky.social', 'alice-bsky-social', {
+  lazy: true,          // don't block navigation
+  server: false,       // client-only fetch
+});
+```
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/nuxt`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/nuxt';
+```

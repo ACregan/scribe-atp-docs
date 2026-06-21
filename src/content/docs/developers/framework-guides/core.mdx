@@ -1,6 +1,91 @@
 ---
-title: core
-description: Using the Scribe ATP SDK with core.
+title: Core (vanilla TypeScript)
+description: Using @scribe-atp/core — the framework-agnostic package — in any environment.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`@scribe-atp/core` is pure TypeScript with no runtime dependencies. It works in any environment: Node.js, Deno, Bun, browsers, edge functions, or any JavaScript runtime.
+
+All framework adapters are thin wrappers around this package. If your framework isn't listed, or you prefer to manage state yourself, use `@scribe-atp/core` directly.
+
+## Install
+
+```bash
+npm install @scribe-atp/core
+```
+
+## Fetch a site
+
+```ts
+import { fetchSite, toSlug } from '@scribe-atp/core';
+
+const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+
+console.log(site.title);
+console.log(site.description);
+console.log(site.url);        // e.g. "alice.bsky.social"
+console.log(site.urlPrefix);  // e.g. "blog" or ""
+
+for (const group of site.groups) {
+  for (const article of group.articles) {
+    console.log(article.title, article.url, article.synopsis);
+  }
+}
+
+// Unpublished articles (assigned to the site but not yet in a group)
+console.log(site.ungroupedArticles);
+```
+
+## Fetch an article
+
+```ts
+import { fetchArticle } from '@scribe-atp/core';
+
+const article = await fetchArticle('alice.bsky.social', 'my-first-post');
+
+console.log(article.title);
+console.log(article.synopsis);
+console.log(article.content);  // Full HTML — safe to render directly
+console.log(article.createdAt);
+```
+
+## Utilities
+
+```ts
+import { toSlug, slugFromUri, flattenArticles } from '@scribe-atp/core';
+
+toSlug('norobots.blog')     // → "norobots-blog"
+toSlug('alice.bsky.social') // → "alice-bsky-social"
+
+slugFromUri('at://did:plc:abc/app.scribe.article/my-post') // → "my-post"
+
+// All published articles across all groups, in order
+const allArticles = flattenArticles(site.groups);
+```
+
+## Cancelling requests
+
+Both functions accept an optional `AbortSignal` as a third argument:
+
+```ts
+// Server context — cancel if the user navigates away
+const site = await fetchSite(author, siteSlug, request.signal);
+
+// Client context — cancel on unmount or parameter change
+const controller = new AbortController();
+const site = await fetchSite(author, siteSlug, controller.signal);
+controller.abort(); // cancel
+```
+
+<Aside type="tip">
+  Framework adapters wire up cancellation automatically. You only need to manage signals manually when using `@scribe-atp/core` directly.
+</Aside>
+
+## TypeScript types
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/core';
+```
+
+See the [API reference](/developers/api-reference/core) for full type definitions.

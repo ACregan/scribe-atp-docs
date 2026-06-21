@@ -1,6 +1,143 @@
 ---
-title: angular
-description: Using the Scribe ATP SDK with angular.
+title: Angular
+description: Using @scribe-atp/angular — ScribeService (Observable API) and injectSite / injectArticle (Signals API).
 ---
 
-Coming soon.
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+`@scribe-atp/angular` ships two APIs. Choose based on your component style:
+
+| API | Style | Returns |
+| --- | ----- | ------- |
+| `ScribeService` | RxJS / `async` pipe | Cold Observables — fetch starts on subscribe, cancels on unsubscribe |
+| `injectSite` / `injectArticle` | Angular Signals | Readonly signals — fetch starts immediately, cancels on component destroy |
+
+## Install
+
+```bash
+npm install @scribe-atp/angular
+```
+
+Requires Angular 16 or later.
+
+## Observable API — `ScribeService`
+
+`ScribeService` is provided in the root injector. Use it with the `async` pipe for the most concise result:
+
+<Tabs>
+  <TabItem label="Fetch a site">
+    ```ts
+    import { Component, inject } from '@angular/core';
+    import { AsyncPipe, NgIf, NgFor } from '@angular/common';
+    import { ScribeService } from '@scribe-atp/angular';
+
+    @Component({
+      standalone: true,
+      imports: [AsyncPipe, NgIf, NgFor],
+      template: `
+        <ng-container *ngIf="site$ | async as site">
+          <h1>{{ site.title }}</h1>
+          <section *ngFor="let group of site.groups">
+            <h2>{{ group.title }}</h2>
+            <ul>
+              <li *ngFor="let article of group.articles">{{ article.title }}</li>
+            </ul>
+          </section>
+        </ng-container>
+      `,
+    })
+    export class BlogComponent {
+      site$ = inject(ScribeService).getSite('alice.bsky.social', 'alice-bsky-social');
+    }
+    ```
+  </TabItem>
+  <TabItem label="Fetch an article">
+    ```ts
+    import { Component, inject } from '@angular/core';
+    import { AsyncPipe, NgIf } from '@angular/common';
+    import { ScribeService } from '@scribe-atp/angular';
+
+    @Component({
+      standalone: true,
+      imports: [AsyncPipe, NgIf],
+      template: `
+        <ng-container *ngIf="article$ | async as article">
+          <h1>{{ article.title }}</h1>
+          <div [innerHTML]="article.content"></div>
+        </ng-container>
+      `,
+    })
+    export class ArticleComponent {
+      article$ = inject(ScribeService).getArticle('alice.bsky.social', 'my-first-post');
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+The fetch is cancelled automatically when you unsubscribe or when the `async` pipe's host component is destroyed.
+
+## Signals API — `injectSite` / `injectArticle`
+
+Injection functions return `{ site, loading, error }` as readonly signals. The fetch is aborted automatically when the host component is destroyed.
+
+<Tabs>
+  <TabItem label="Fetch a site">
+    ```ts
+    import { Component } from '@angular/core';
+    import { NgIf, NgFor } from '@angular/common';
+    import { injectSite } from '@scribe-atp/angular';
+
+    @Component({
+      standalone: true,
+      imports: [NgIf, NgFor],
+      template: `
+        <p *ngIf="vm.loading()">Loading…</p>
+        <p *ngIf="vm.error()">{{ vm.error()!.message }}</p>
+        <ng-container *ngIf="vm.site() as site">
+          <h1>{{ site.title }}</h1>
+          <section *ngFor="let group of site.groups">
+            <h2>{{ group.title }}</h2>
+          </section>
+        </ng-container>
+      `,
+    })
+    export class BlogComponent {
+      vm = injectSite('alice.bsky.social', 'alice-bsky-social');
+    }
+    ```
+  </TabItem>
+  <TabItem label="Fetch an article">
+    ```ts
+    import { Component } from '@angular/core';
+    import { NgIf } from '@angular/common';
+    import { injectArticle } from '@scribe-atp/angular';
+
+    @Component({
+      standalone: true,
+      imports: [NgIf],
+      template: `
+        <p *ngIf="vm.loading()">Loading…</p>
+        <article *ngIf="vm.article() as article">
+          <h1>{{ article.title }}</h1>
+          <div [innerHTML]="article.content"></div>
+        </article>
+      `,
+    })
+    export class ArticleComponent {
+      vm = injectArticle('alice.bsky.social', 'my-first-post');
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside>
+  Injection functions must be called in an **injection context** — inside a constructor or class field initialiser. They cannot be called inside lifecycle hooks or event handlers.
+</Aside>
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/angular`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/angular';
+```

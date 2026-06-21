@@ -1,6 +1,86 @@
 ---
-title: react-router
-description: Using the Scribe ATP SDK with react-router.
+title: React Router v7
+description: Using @scribe-atp/react-router-framework — loader factories for React Router v7 framework (server) mode.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`@scribe-atp/react-router-framework` provides loader factories for [React Router v7 framework mode](https://reactrouter.com). The factories wire up `request.signal` automatically so fetches are cancelled if the user navigates away before the response arrives.
+
+<Aside>
+  This package is for **framework (server) mode** only. For React Router in SPA / library mode, use [`@scribe-atp/react`](/developers/framework-guides/react) instead.
+</Aside>
+
+## Install
+
+```bash
+npm install @scribe-atp/react-router-framework
+```
+
+## Site index route
+
+Use `createSiteLoader` to create a loader for a route that displays the full site — groups and article listings.
+
+```tsx
+// app/routes/blog.tsx
+import { createSiteLoader } from '@scribe-atp/react-router-framework';
+import { useLoaderData } from 'react-router';
+
+export const loader = createSiteLoader('alice.bsky.social', 'alice-bsky-social');
+
+export default function Blog() {
+  const site = useLoaderData<typeof loader>();
+
+  return (
+    <main>
+      <h1>{site.title}</h1>
+      {site.groups.map((group) => (
+        <section key={group.slug}>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.articles.map((article) => (
+              <li key={article.uri}>
+                <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  );
+}
+```
+
+## Dynamic article route
+
+For routes where the slug comes from URL params, use `fetchArticle` from `@scribe-atp/core` directly inside your loader:
+
+```tsx
+// app/routes/blog.$group.$slug.tsx
+import type { LoaderFunctionArgs } from 'react-router';
+import { fetchArticle } from '@scribe-atp/core';
+import { useLoaderData } from 'react-router';
+
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  return fetchArticle('alice.bsky.social', params.slug!, request.signal);
+}
+
+export default function Article() {
+  const article = useLoaderData<typeof loader>();
+
+  return (
+    <article>
+      <h1>{article.title}</h1>
+      <div dangerouslySetInnerHTML={{ __html: article.content }} />
+    </article>
+  );
+}
+```
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/react-router-framework`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react-router-framework';
+```

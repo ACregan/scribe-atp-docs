@@ -1,6 +1,82 @@
 ---
-title: react
-description: Using the Scribe ATP SDK with react.
+title: React
+description: Using @scribe-atp/react — hooks for React SPA and client-rendered components.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`@scribe-atp/react` provides `useSite` and `useArticle` hooks for React SPA and client-rendered components. Each hook manages loading state, error state, and request cancellation automatically.
+
+<Aside>
+  For **React Router v7 framework (server) mode**, use [`@scribe-atp/react-router-framework`](/developers/framework-guides/react-router) instead. For **Next.js App Router**, use [`@scribe-atp/next`](/developers/framework-guides/next).
+</Aside>
+
+## Install
+
+```bash
+npm install @scribe-atp/react
+```
+
+Requires React 18 or later.
+
+## `useSite`
+
+```tsx
+import { useSite, toSlug } from '@scribe-atp/react';
+
+function BlogIndex() {
+  const { site, loading, error } = useSite('alice.bsky.social', toSlug('alice.bsky.social'));
+
+  if (loading) return <p>Loading…</p>;
+  if (error)   return <p>Error: {error.message}</p>;
+
+  return (
+    <main>
+      <h1>{site.title}</h1>
+      {site.groups.map((group) => (
+        <section key={group.slug}>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.articles.map((article) => (
+              <li key={article.uri}>
+                <a href={`/${group.slug}/${article.url}`}>{article.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  );
+}
+```
+
+## `useArticle`
+
+```tsx
+import { useArticle } from '@scribe-atp/react';
+
+function ArticlePage({ author, slug }: { author: string; slug: string }) {
+  const { article, loading, error } = useArticle(author, slug);
+
+  if (loading) return <p>Loading…</p>;
+  if (error)   return <p>Error: {error.message}</p>;
+
+  return (
+    <article>
+      <h1>{article.title}</h1>
+      {article.synopsis && <p>{article.synopsis}</p>}
+      <div dangerouslySetInnerHTML={{ __html: article.content }} />
+    </article>
+  );
+}
+```
+
+Both hooks re-fetch automatically when their parameters change and abort the in-flight request when the component unmounts.
+
+## TypeScript types
+
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/react`:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react';
+```
