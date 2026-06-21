@@ -1,6 +1,50 @@
 ---
-title: using-a-website
-description: Author documentation.
+title: Using a Website
+description: How to get your Scribe content displaying on a website — what you need and what to ask a developer for.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+Scribe CMS stores your content. To display that content on a website, you need a website that has been set up to read from your Scribe account using the **Scribe SDK**.
+
+This page explains how the two pieces fit together and what to ask a developer for if you need help.
+
+## How it works
+
+1. You write and publish content in [Scribe CMS](https://scribe-cms.app).
+2. A website built with the Scribe SDK reads your content directly from your account.
+3. Visitors to your website see your published articles — grouped and navigable, with an RSS feed and a sitemap.
+
+Your content stays in your account at all times. The website reads it when someone visits — there's no export, copy-paste, or sync required.
+
+## What a developer needs from you
+
+If a developer is building or connecting a website to your Scribe account, they'll need two things:
+
+| What | Example | Where to find it |
+| ---- | ------- | ---------------- |
+| **Your Bluesky handle** | `alice.bsky.social` | Your Bluesky profile — the username with the `@` |
+| **Your site's domain** (as entered in Scribe CMS) | `alice.example.com` | Your site settings in Scribe CMS |
+
+That's it. The developer uses these to configure the SDK — no passwords or tokens are shared.
+
+<Aside type="tip">
+  The domain in your Scribe site settings must exactly match the domain of the website the developer is building. If the website is at `alice.example.com`, the domain in Scribe must be `alice.example.com` — not `www.alice.example.com` or just `example.com`.
+</Aside>
+
+## URL prefix
+
+If your blog lives at a path on your domain (e.g. `alice.example.com/blog/`) rather than at the root, you need to set a **URL prefix** in your site settings.
+
+In this example, set the URL prefix to `blog`. If your content is at the root of the domain, leave the URL prefix empty.
+
+## RSS feed and sitemap
+
+Any website built with the Scribe SDK can expose an RSS feed and XML sitemap automatically. Ask your developer to enable these — they're a one-file addition to the site. Once enabled:
+
+- The RSS feed lets readers subscribe to your content in any feed reader
+- The sitemap helps search engines find and index your articles
+
+## Self-hosted websites
+
+The Scribe SDK works with any web framework. If a developer is building a new site from scratch to display your content, point them to the [Developer documentation](/developers) — specifically the [Quickstart](/developers/quickstart) and [Framework Guides](/developers/framework-guides/core).

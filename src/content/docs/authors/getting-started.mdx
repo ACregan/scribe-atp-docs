@@ -1,6 +1,46 @@
 ---
-title: getting-started
-description: Author documentation.
+title: Getting Started
+description: Sign up, create your first site, and publish your first article.
 ---
 
-Coming soon.
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **Create a Bluesky account**
+
+   Scribe uses your Bluesky account for identity and storage. If you don't have one, sign up at [bsky.app](https://bsky.app). Your Bluesky handle becomes your author identity in Scribe — for example, `alice.bsky.social`.
+
+   <Aside>
+     You don't need to use Bluesky as a social network. Your account is just storage for your content. You can keep it private if you like.
+   </Aside>
+
+2. **Sign in to Scribe CMS**
+
+   Go to [scribe-cms.app](https://scribe-cms.app) and sign in with your Bluesky credentials.
+
+3. **Create a site**
+
+   In Scribe CMS, click **New Site**. Give it a title, description, and the domain it should be associated with (e.g. `alice.example.com`).
+
+   The domain you enter here must match the domain of the website that will display your content. If you're not sure yet, you can update it later.
+
+4. **Write your first article**
+
+   Click **New Article**. Give it a title, write your content, and optionally add a synopsis and splash image.
+
+   When you're done writing, the article is in **Draft** state — it exists in your account but isn't visible on any website yet.
+
+5. **Publish your article**
+
+   To make the article available on your website:
+
+   1. **Assign it to a site** — open the article and select the site it belongs to. The article becomes **Unpublished**.
+   2. **Create a group** — in the site editor, create a group (e.g. "Writing"). This will be a section on your website.
+   3. **Add the article to the group** — drag or assign the article to the group. The article becomes **Published**.
+
+</Steps>
+
+## What happens next
+
+Once an article is published, any website connected to your Scribe account via the [Scribe SDK](/developers) can display it. If you don't have a website set up yet, see [Using a Website](/authors/using-a-website) to find out what you'll need.

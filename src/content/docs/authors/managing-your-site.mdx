@@ -1,6 +1,47 @@
 ---
-title: managing-your-site
-description: Author documentation.
+title: Managing Your Site
+description: How to manage groups, articles, and site settings in Scribe CMS.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+## Managing groups
+
+Groups define the sections of your site and control how articles are organised in navigation menus.
+
+**To create a group:** Open your site in Scribe CMS and click **New Group**. Give it a name — this becomes the section heading on your website.
+
+**To reorder groups:** Drag groups into the order you want. Connected websites reflect this order in navigation menus.
+
+**To rename a group:** Click the group name to edit it. The change takes effect on your website immediately.
+
+<Aside type="caution">
+  Renaming a group changes its URL segment on your website (e.g. `/writing/` might become `/notes/`). Old URLs will break unless your website is configured with redirects. Check with your developer before renaming a group that already has published articles.
+</Aside>
+
+## Managing articles
+
+**To move an article between groups:** Drag the article to a different group. The article remains published — only its group changes.
+
+**To unpublish an article:** Remove it from its group. It becomes Unpublished — still associated with the site but no longer visible on any website. You can re-publish it at any time by adding it back to a group.
+
+**To delete an article:** Open the article and click **Delete**. Deleted articles are permanently removed from your account.
+
+**To edit a published article:** Open it, make changes, and save. The updated content appears on connected websites immediately — no need to re-publish.
+
+## Site settings
+
+Open your site and click **Settings** to update:
+
+- **Title** — the name of the publication
+- **Description** — a short summary used in RSS feeds and search results
+- **Domain** — the domain of the website this site powers (e.g. `alice.example.com`)
+- **URL prefix** — if your blog lives at `/blog/` rather than at the root, set this to `blog`
+- **Splash image** — a featured image for the site, used in social previews
+- **Logo** — an image used in website headers
+
+## Multiple sites
+
+You can manage multiple sites from a single Scribe account. Each site has its own groups and articles, and each can power a different domain.
+
+To create a second site, click **New Site** from the site list. Articles belong to exactly one site — you cannot share a single article across multiple sites.

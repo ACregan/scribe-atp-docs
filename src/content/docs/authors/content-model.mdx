@@ -1,6 +1,62 @@
 ---
-title: content-model
-description: Author documentation.
+title: The Content Model
+description: How Sites, Groups, and Articles fit together in Scribe.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+Scribe organises your content in three levels: **Sites**, **Groups**, and **Articles**. Understanding how they nest together will make everything else in Scribe click into place.
+
+## Sites
+
+A **Site** is a publication — the top-level container for all your content. You have one site per website you want to power.
+
+If you write for two separate blogs on two separate domains, you create two sites. Each site has:
+- A **title** and **description** that describe the publication
+- A **domain** (e.g. `alice.example.com`) that tells connected websites where the content belongs
+- Its own set of groups and articles
+
+## Groups
+
+A **Group** is a section or category within a site. Groups define the shape of your site's navigation. Examples:
+
+- A personal blog might have groups like *"Writing"*, *"Projects"*, and *"Notes"*
+- A company blog might have *"Engineering"*, *"Product"*, and *"Company News"*
+
+Groups are ordered — you control how they appear in the navigation of any connected website.
+
+## Articles
+
+An **Article** is a single piece of writing. Each article belongs to one site and can be placed in one group.
+
+Articles have:
+- A **title** and **synopsis** (optional short summary)
+- A **splash image** (optional featured image)
+- The full **content** you wrote in the editor
+
+## How they nest
+
+```
+Site: alice.example.com
+├── Group: Writing
+│   ├── Article: My first post
+│   └── Article: Six months in
+└── Group: Projects
+    └── Article: Building a side project
+```
+
+Each article lives under exactly one group, which lives under exactly one site.
+
+## Publication states
+
+Every article is in one of three states:
+
+| State | What it means |
+| ----- | ------------- |
+| **Draft** | The article exists but isn't associated with any site yet. Only you can see it in Scribe CMS. |
+| **Unpublished** | The article is associated with a site but not yet placed in a group. It won't appear on any website. |
+| **Published** | The article is in a group. It's live on any website connected to that site. |
+
+<Aside type="tip">
+  Moving an article from Unpublished to Published is as simple as placing it in a group. Moving it back to Unpublished removes it from public view without deleting it.
+</Aside>
