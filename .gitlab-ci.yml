@@ -1,0 +1,50 @@
+stages:
+  - build
+  - deploy
+
+default:
+  image: node:22
+  tags:
+    - SERVER-docker-runner
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  interruptible: true
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*.mdx"
+        - "**/*.md"
+        - "**/*.ts"
+        - "**/*.mjs"
+        - "**/*.json"
+        - ".gitlab-ci.yml"
+
+deploy:
+  stage: deploy
+  interruptible: false
+  environment:
+    name: production
+    url: https://scribe-atp.app
+  before_script:
+    - command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )
+    - eval $(ssh-agent -s)
+    - printf '\n' >> "$SSH_DEPLOY_KEY"
+    - chmod 400 "$SSH_DEPLOY_KEY" && ssh-add "$SSH_DEPLOY_KEY"
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+  script:
+    - ssh $VPS_USER@$VPS_HOST "~/server/deploy.sh scribe-atp.app"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
