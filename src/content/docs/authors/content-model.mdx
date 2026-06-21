@@ -27,7 +27,7 @@ Groups are ordered — you control how they appear in the navigation of any conn
 
 ## Articles
 
-An **Article** is a single piece of writing. Each article belongs to one site and can be placed in one group.
+An **Article** is a single piece of writing. An article can be assigned to multiple sites, but within each site it can only be placed in one group.
 
 Articles have:
 - A **title** and **synopsis** (optional short summary)
@@ -45,7 +45,7 @@ Site: alice.example.com
     └── Article: Building a side project
 ```
 
-Each article lives under exactly one group, which lives under exactly one site.
+Within a site, each article sits in at most one group. The same article can appear in a different site — useful if you run multiple publications and want to cross-post a piece.
 
 ## Publication states
 
