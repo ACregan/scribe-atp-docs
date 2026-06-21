@@ -45,6 +45,64 @@ Fetches a single article record (including full HTML content) from the author's 
 
 ---
 
+### `listSites`
+
+```ts
+function listSites(
+  author: string,
+  signal?: AbortSignal
+): Promise<SiteRecord[]>
+```
+
+Returns all site records for the given author. Calls `com.atproto.repo.listRecords` for the `app.scribe.site` collection and follows cursor pagination automatically.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle (`alice.bsky.social`) or DID (`did:plc:…`) |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+Each `SiteRecord` is a `Site` with an additional `uri` field (the full AT URI of the record). Use `slugFromUri(record.uri)` to extract the rkey when you need to construct URLs.
+
+---
+
+### `listArticles`
+
+```ts
+function listArticles(
+  author: string,
+  signal?: AbortSignal
+): Promise<ArticleRef[]>
+```
+
+Returns all article records for the given author as lightweight `ArticleRef` objects (no `content` field). Calls `com.atproto.repo.listRecords` for the `app.scribe.article` collection and follows cursor pagination automatically.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+To determine the publication state of each article, cross-reference with `listSites`:
+
+```ts
+const [sites, articles] = await Promise.all([
+  listSites(author),
+  listArticles(author),
+]);
+
+const referencedUris = new Set(
+  sites.flatMap((s) => [
+    ...s.groups.flatMap((g) => g.articles),
+    ...s.ungroupedArticles,
+  ]).map((a) => a.uri)
+);
+
+const drafts = articles.filter((a) => !referencedUris.has(a.uri));
+```
+
+Call `fetchArticle` to retrieve the full `content` for any article.
+
+---
+
 ### `toSlug`
 
 ```ts
@@ -199,3 +257,15 @@ interface Article {
   updatedAt: string;      // ISO 8601
 }
 ```
+
+### `SiteRecord`
+
+A `Site` with the AT URI of its underlying record included. Returned by `listSites`.
+
+```ts
+interface SiteRecord extends Site {
+  uri: string;  // AT URI, e.g. "at://did:plc:…/app.scribe.site/norobots-blog"
+}
+```
+
+Use `slugFromUri(record.uri)` to extract the rkey when constructing URLs.
