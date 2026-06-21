@@ -1,6 +1,83 @@
 ---
-title: building-urls
-description: Guide.
+title: Building URLs
+description: How to construct canonical article URLs from a Scribe site record.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+A Scribe `Site` record carries two URL-related fields that together define the root of the site's content:
+
+| Field | Example | Meaning |
+| ----- | ------- | ------- |
+| `site.url` | `"anthonycregan.co.uk"` | The site's domain (no protocol) |
+| `site.urlPrefix` | `"blog"` | Path prefix for content — empty string if content is at the root |
+
+An article's own slug lives in `article.url` (on an `ArticleRef`) or `article.url` (on a full `Article`).
+
+## Article URL pattern
+
+The canonical URL for a published article is:
+
+```
+https://{site.url}/{site.urlPrefix}/{group.slug}/{article.url}
+```
+
+When `urlPrefix` is empty, the pattern is:
+
+```
+https://{site.url}/{group.slug}/{article.url}
+```
+
+## Helper function
+
+Write a small utility function once and reuse it across your app:
+
+```ts
+import type { Site } from '@scribe-atp/core';
+
+function articleUrl(site: Site, groupSlug: string, articleSlug: string): string {
+  const base = site.urlPrefix
+    ? `https://${site.url}/${site.urlPrefix}`
+    : `https://${site.url}`;
+  return `${base}/${groupSlug}/${articleSlug}`;
+}
+```
+
+Usage:
+
+```ts
+const url = articleUrl(site, group.slug, article.url);
+// e.g. "https://anthonycregan.co.uk/blog/2024/my-first-post"
+//   or "https://norobots.blog/2024/my-first-post"
+```
+
+<Aside type="tip">
+  When building internal links within your own site, use relative paths (`/blog/2024/my-first-post`) rather than absolute URLs. The absolute form is for canonical `<link>` tags, RSS items, and sitemap entries.
+</Aside>
+
+## Deriving site slugs
+
+The **site slug** is the rkey used to fetch a site record. Derive it from the site's domain using `toSlug`:
+
+```ts
+import { toSlug } from '@scribe-atp/core';
+
+toSlug('norobots.blog')        // → "norobots-blog"
+toSlug('anthonycregan.co.uk')  // → "anthonycregan-co-uk"
+toSlug('alice.bsky.social')    // → "alice-bsky-social"
+```
+
+`toSlug` replaces `.` and other non-alphanumeric characters with `-`.
+
+## Deriving article slugs from AT URIs
+
+If you have an AT URI and need the article slug (rkey), use `slugFromUri`:
+
+```ts
+import { slugFromUri } from '@scribe-atp/core';
+
+slugFromUri('at://did:plc:abc123/app.scribe.article/my-first-post')
+// → "my-first-post"
+```
+
+This is useful when working directly with AT Protocol records rather than the normalised `Site` object.

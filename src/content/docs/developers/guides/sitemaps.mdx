@@ -1,6 +1,129 @@
 ---
-title: sitemaps
-description: Guide.
+title: Sitemaps
+description: Generate an XML sitemap using getSitemapEntries from @scribe-atp/core.
 ---
 
-Coming soon.
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+`@scribe-atp/core` exports `getSitemapEntries` — a function that takes a fetched `Site` and returns an array of `{ url, lastmod? }` objects. You use those to build the XML yourself, giving you full control over the output format.
+
+## Basic usage
+
+```ts
+import { fetchSite, getSitemapEntries } from '@scribe-atp/core';
+
+const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+const entries = getSitemapEntries(site, { baseUrl: 'https://alice.example.com' });
+
+// entries is: Array<{ url: string; lastmod?: string }>
+```
+
+## Wiring into your framework
+
+<Tabs>
+  <TabItem label="React Router v7">
+    ```ts
+    // app/routes/sitemap.ts
+    import { fetchSite, getSitemapEntries } from '@scribe-atp/core';
+
+    export async function loader({ request }: { request: Request }) {
+      const origin = new URL(request.url).origin;
+      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const entries = getSitemapEntries(site, { baseUrl: origin });
+
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...entries.map(
+          (e) =>
+            `<url><loc>${e.url}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}</url>`
+        ),
+        '</urlset>',
+      ].join('');
+
+      return new Response(xml, {
+        headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+      });
+    }
+    ```
+  </TabItem>
+  <TabItem label="Next.js App Router">
+    ```ts
+    // app/sitemap.xml/route.ts
+    import { fetchSite, getSitemapEntries } from '@scribe-atp/core';
+
+    export async function GET(request: Request) {
+      const origin = new URL(request.url).origin;
+      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const entries = getSitemapEntries(site, { baseUrl: origin });
+
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...entries.map(
+          (e) =>
+            `<url><loc>${e.url}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}</url>`
+        ),
+        '</urlset>',
+      ].join('');
+
+      return new Response(xml, {
+        headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+      });
+    }
+    ```
+  </TabItem>
+  <TabItem label="SvelteKit">
+    ```ts
+    // src/routes/sitemap.xml/+server.ts
+    import { fetchSite, getSitemapEntries } from '@scribe-atp/core';
+    import type { RequestHandler } from './$types';
+
+    export const GET: RequestHandler = async ({ url }) => {
+      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+      const entries = getSitemapEntries(site, { baseUrl: url.origin });
+
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...entries.map(
+          (e) =>
+            `<url><loc>${e.url}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}</url>`
+        ),
+        '</urlset>',
+      ].join('');
+
+      return new Response(xml, {
+        headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+      });
+    };
+    ```
+  </TabItem>
+</Tabs>
+
+## Adding static pages
+
+`getSitemapEntries` only returns URLs for published articles. To include static pages (home page, about, etc.), append them manually:
+
+```ts
+const entries = getSitemapEntries(site, { baseUrl: origin });
+
+const staticPages = [
+  { url: `${origin}/` },
+  { url: `${origin}/about` },
+];
+
+const allEntries = [...staticPages, ...entries];
+```
+
+## What gets included
+
+`getSitemapEntries` returns one entry per **published** article. Each entry includes:
+- `url` — the canonical article URL, built from the site's `url` and `urlPrefix`
+- `lastmod` — the article's `updatedAt` timestamp (ISO 8601 format), when set
+
+Unpublished articles (`site.ungroupedArticles`) are excluded.
+
+<Aside>
+  Group index pages (e.g. `/blog/2024`) are not included in the sitemap entries by default, since they change every time a new article is added. Add them manually if you want them indexed.
+</Aside>

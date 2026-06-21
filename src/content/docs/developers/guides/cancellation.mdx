@@ -1,6 +1,97 @@
 ---
-title: cancellation
-description: Guide.
+title: Request cancellation
+description: How fetchSite and fetchArticle handle AbortSignal, and when you need to manage it yourself.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+`fetchSite` and `fetchArticle` both accept an optional `AbortSignal` as a third argument. When the signal fires, any in-flight HTTP requests are cancelled immediately.
+
+```ts
+fetchSite(author, siteSlug, signal?)
+fetchArticle(author, articleSlug, signal?)
+```
+
+## When you need this
+
+**In server contexts**, passing the request's signal ensures the Scribe PDS fetch is cancelled if the user navigates away before your loader responds. Without it, the server continues fetching data after the response is no longer needed.
+
+**In client contexts**, passing a signal from an `AbortController` lets you cancel the fetch on component unmount or when parameters change.
+
+## Framework adapters wire this up automatically
+
+If you are using a framework adapter (`@scribe-atp/react`, `@scribe-atp/angular`, etc.), you do not need to manage signals manually:
+
+- **React hooks** (`useSite`, `useArticle`) — abort on unmount and on parameter change
+- **Angular signals** (`injectSite`, `injectArticle`) — abort when the host component is destroyed
+- **Angular Observable** (`ScribeService`) — abort when you unsubscribe or when `async` pipe's component is destroyed
+- **Vue composables** — abort on unmount and on parameter change
+- **Nuxt composables** — handled by `useAsyncData`
+
+Only read on if you are using `@scribe-atp/core` directly.
+
+---
+
+## Server context
+
+Pass `request.signal` directly from the incoming request:
+
+```ts
+// React Router v7
+export async function loader({ request }: LoaderFunctionArgs) {
+  return fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+}
+
+// Next.js App Router
+export async function GET(request: Request) {
+  return fetchArticle('alice.bsky.social', params.slug, request.signal);
+}
+```
+
+## Client context
+
+Create an `AbortController` and abort when needed:
+
+```ts
+// Cancel on component unmount (vanilla JS)
+const controller = new AbortController();
+const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', controller.signal);
+
+// Later — component unmounts or user navigates away:
+controller.abort();
+```
+
+In React you can do this inside `useEffect`:
+
+```ts
+useEffect(() => {
+  const controller = new AbortController();
+
+  fetchSite('alice.bsky.social', 'alice-bsky-social', controller.signal)
+    .then(setSite)
+    .catch((err) => {
+      if (err.name !== 'AbortError') throw err;
+    });
+
+  return () => controller.abort();
+}, []);
+```
+
+<Aside>
+  Use `@scribe-atp/react` instead of writing this by hand — `useSite` and `useArticle` handle the `AbortController` lifecycle for you.
+</Aside>
+
+## Handling AbortError
+
+When a signal fires, the rejected promise contains an `AbortError`. Always check for it and swallow it — a cancelled request is not an error:
+
+```ts
+try {
+  const site = await fetchSite(author, siteSlug, controller.signal);
+} catch (err) {
+  if (err instanceof Error && err.name === 'AbortError') {
+    return; // normal — request was cancelled
+  }
+  throw err; // unexpected error — re-throw
+}
+```
