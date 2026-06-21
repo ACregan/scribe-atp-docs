@@ -1,6 +1,72 @@
 ---
 title: "@scribe-atp/react"
-description: API reference for @scribe-atp/react.
+description: API reference for @scribe-atp/react — useSite and useArticle hooks.
 ---
 
-Coming soon.
+## Hooks
+
+### `useSite`
+
+```ts
+function useSite(author: string, siteSlug: string): UseSiteResult
+
+interface UseSiteResult {
+  site: Site | null;
+  loading: boolean;
+  error: Error | null;
+}
+```
+
+Fetches a site on mount and re-fetches whenever `author` or `siteSlug` changes. Aborts the in-flight request on unmount and on parameter change.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+
+While loading, `site` is `null` and `loading` is `true`. On error, `site` remains `null` and `error` is set. `AbortError` is swallowed and does not set `error`.
+
+---
+
+### `useArticle`
+
+```ts
+function useArticle(author: string, articleSlug: string): UseArticleResult
+
+interface UseArticleResult {
+  article: Article | null;
+  loading: boolean;
+  error: Error | null;
+}
+```
+
+Fetches an article on mount and re-fetches whenever `author` or `articleSlug` changes. Aborts on unmount and on parameter change.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+
+---
+
+## Utilities
+
+`toSlug` is re-exported for convenience:
+
+```ts
+import { toSlug } from '@scribe-atp/react';
+```
+
+See [`toSlug` in the core reference](/developers/api-reference/core#toslug) for details.
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

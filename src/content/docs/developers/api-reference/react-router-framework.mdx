@@ -1,6 +1,57 @@
 ---
 title: "@scribe-atp/react-router-framework"
-description: API reference for @scribe-atp/react-router-framework.
+description: API reference for @scribe-atp/react-router-framework — loader factories for React Router v7 framework mode.
 ---
 
-Coming soon.
+## Functions
+
+### `createSiteLoader`
+
+```ts
+function createSiteLoader(
+  author: string,
+  siteSlug: string
+): (args: LoaderFunctionArgs) => Promise<Site>
+```
+
+Returns a React Router loader function that fetches a site. The loader passes `request.signal` automatically so the fetch is cancelled if the user navigates away.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+
+```ts
+// app/routes/blog.tsx
+export const loader = createSiteLoader('alice.bsky.social', 'alice-bsky-social');
+```
+
+---
+
+### `createArticleLoader`
+
+```ts
+function createArticleLoader(
+  author: string,
+  articleSlug: string
+): (args: LoaderFunctionArgs) => Promise<Article>
+```
+
+Returns a React Router loader function that fetches a single article. Useful when the slug is static (e.g. a featured article). For dynamic slugs from URL params, use `fetchArticle` from `@scribe-atp/core` directly inside your loader.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react-router-framework';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

@@ -1,6 +1,93 @@
 ---
 title: "@scribe-atp/angular"
-description: API reference for @scribe-atp/angular.
+description: API reference for @scribe-atp/angular — ScribeService (Observable API) and injectSite / injectArticle (Signals API).
 ---
 
-Coming soon.
+## Observable API — `ScribeService`
+
+### `ScribeService`
+
+Injectable service (provided in root) with methods that return cold Observables. The fetch starts when you subscribe and is cancelled when you unsubscribe.
+
+```ts
+import { inject } from '@angular/core';
+import { ScribeService } from '@scribe-atp/angular';
+
+const scribe = inject(ScribeService);
+```
+
+#### `getSite`
+
+```ts
+getSite(author: string, siteSlug: string): Observable<Site>
+```
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+
+Returns a cold Observable. Subscribe with the `async` pipe for automatic unsubscription on component destroy.
+
+#### `getArticle`
+
+```ts
+getArticle(author: string, articleSlug: string): Observable<Article>
+```
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+
+---
+
+## Signals API
+
+### `injectSite`
+
+```ts
+function injectSite(author: string, siteSlug: string): {
+  site: Signal<Site | null>;
+  loading: Signal<boolean>;
+  error: Signal<Error | null>;
+}
+```
+
+Injection function (must be called in an injection context). Fetches a site immediately and returns readonly signals. The request is aborted when the host component is destroyed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey |
+
+---
+
+### `injectArticle`
+
+```ts
+function injectArticle(author: string, articleSlug: string): {
+  article: Signal<Article | null>;
+  loading: Signal<boolean>;
+  error: Signal<Error | null>;
+}
+```
+
+Injection function (must be called in an injection context). Fetches an article immediately and returns readonly signals. The request is aborted when the host component is destroyed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/angular';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

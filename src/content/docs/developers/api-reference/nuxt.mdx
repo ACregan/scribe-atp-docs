@@ -1,6 +1,73 @@
 ---
 title: "@scribe-atp/nuxt"
-description: API reference for @scribe-atp/nuxt.
+description: API reference for @scribe-atp/nuxt — a Nuxt 3 module with auto-imported composables.
 ---
 
-Coming soon.
+## Module registration
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@scribe-atp/nuxt'],
+});
+```
+
+Once registered, `useScribeSite` and `useScribeArticle` are available in all components and pages without explicit imports.
+
+---
+
+## Composables
+
+### `useScribeSite`
+
+```ts
+function useScribeSite(
+  author: string,
+  siteSlug: string,
+  options?: AsyncDataOptions
+): Promise<AsyncData<Site | null, Error | null>>
+```
+
+Wraps `fetchSite` with `useAsyncData`. The composable is SSR-safe: data is fetched on the server and hydrated on the client.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `options` | `AsyncDataOptions` | Optional. Forwarded to `useAsyncData` — `lazy`, `server`, `watch`, etc. |
+
+Returns `{ data, pending, error, refresh }` — the standard Nuxt `AsyncData` shape. `data` holds `Site | null`.
+
+---
+
+### `useScribeArticle`
+
+```ts
+function useScribeArticle(
+  author: string,
+  articleSlug: string,
+  options?: AsyncDataOptions
+): Promise<AsyncData<Article | null, Error | null>>
+```
+
+Wraps `fetchArticle` with `useAsyncData`.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+| `options` | `AsyncDataOptions` | Optional. Forwarded to `useAsyncData` |
+
+Returns `{ data, pending, error, refresh }`. `data` holds `Article | null`.
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/nuxt';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

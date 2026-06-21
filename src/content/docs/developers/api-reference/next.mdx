@@ -1,6 +1,101 @@
 ---
 title: "@scribe-atp/next"
-description: API reference for @scribe-atp/next.
+description: API reference for @scribe-atp/next — createScribeSite factory for Next.js App Router.
 ---
 
-Coming soon.
+## Functions
+
+### `createScribeSite`
+
+```ts
+function createScribeSite(author: string, siteSlug: string): ScribeSiteFactory
+```
+
+Returns a factory object with methods for `generateStaticParams` and `generateMetadata` in the Next.js 13+ App Router.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+
+**Usage:**
+
+```ts
+// lib/scribe.ts
+import { createScribeSite } from '@scribe-atp/next';
+export const scribe = createScribeSite('alice.bsky.social', 'alice-bsky-social');
+```
+
+---
+
+## Factory methods
+
+### `generateGroupParams`
+
+```ts
+generateGroupParams(): Promise<{ groupSlug: string }[]>
+```
+
+Returns static params for a `[groupSlug]` route segment. Use as `generateStaticParams` on a group page.
+
+---
+
+### `generateArticleParams`
+
+```ts
+generateArticleParams(): Promise<{ articleSlug: string }[]>
+```
+
+Returns static params for an `[articleSlug]` route segment (flat, no group prefix). Use as `generateStaticParams` on an article page with a single dynamic segment.
+
+---
+
+### `generateGroupArticleParams`
+
+```ts
+generateGroupArticleParams(): Promise<{ groupSlug: string; articleSlug: string }[]>
+```
+
+Returns static params for a `[groupSlug]/[articleSlug]` route. Use as `generateStaticParams` on a nested article page.
+
+---
+
+### `generateSiteMetadata`
+
+```ts
+generateSiteMetadata(): Promise<Metadata>
+```
+
+Returns Next.js `Metadata` for the site index page, including `title`, `description`, and `openGraph` fields.
+
+---
+
+### `generateGroupMetadata`
+
+```ts
+generateGroupMetadata(groupSlug: string): Promise<Metadata>
+```
+
+Returns `Metadata` for a group page. Title format: `"{Group Title} — {Site Title}"`.
+
+---
+
+### `generateArticleMetadata`
+
+```ts
+generateArticleMetadata(articleSlug: string): Promise<Metadata>
+```
+
+Returns `Metadata` for an article page, including `title`, `description` (from `synopsis`), and `openGraph.images` (from `splashImageUrl`). Title format: `"{Article Title} — {Site Title}"`.
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/next';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

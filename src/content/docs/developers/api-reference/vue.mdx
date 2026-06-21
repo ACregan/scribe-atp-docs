@@ -1,6 +1,60 @@
 ---
 title: "@scribe-atp/vue"
-description: API reference for @scribe-atp/vue.
+description: API reference for @scribe-atp/vue — useScribeSite and useScribeArticle composables.
 ---
 
-Coming soon.
+## Composables
+
+### `useScribeSite`
+
+```ts
+function useScribeSite(author: string, siteSlug: string): UseScribeSiteResult
+
+interface UseScribeSiteResult {
+  site: Ref<Site | null>;
+  loading: Ref<boolean>;
+  error: Ref<Error | null>;
+}
+```
+
+Fetches a site when the composable is called and aborts the request when the host component is unmounted. Returns reactive refs.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+
+While loading, `site.value` is `null` and `loading.value` is `true`. On error, `error.value` is set. `AbortError` is swallowed.
+
+---
+
+### `useScribeArticle`
+
+```ts
+function useScribeArticle(author: string, articleSlug: string): UseScribeArticleResult
+
+interface UseScribeArticleResult {
+  article: Ref<Article | null>;
+  loading: Ref<boolean>;
+  error: Ref<Error | null>;
+}
+```
+
+Fetches an article when the composable is called and aborts on unmount. Returns reactive refs.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | Article rkey / slug |
+
+---
+
+## Types
+
+All types from `@scribe-atp/core` are re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/vue';
+```
+
+See the [core reference](/developers/api-reference/core#types) for type definitions.

@@ -1,6 +1,201 @@
 ---
 title: "@scribe-atp/core"
-description: API reference for @scribe-atp/core.
+description: Complete API reference for @scribe-atp/core — functions, types, and options.
 ---
 
-Coming soon.
+## Functions
+
+### `fetchSite`
+
+```ts
+function fetchSite(
+  author: string,
+  siteSlug: string,
+  signal?: AbortSignal
+): Promise<Site>
+```
+
+Fetches a site record from the author's PDS. Resolves the author handle to a DID, discovers the PDS, and returns the full `Site` with embedded group and article metadata.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle (`alice.bsky.social`) or DID (`did:plc:…`) |
+| `siteSlug` | `string` | The site's rkey — derive with `toSlug(domain)` |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+---
+
+### `fetchArticle`
+
+```ts
+function fetchArticle(
+  author: string,
+  articleSlug: string,
+  signal?: AbortSignal
+): Promise<Article>
+```
+
+Fetches a single article record (including full HTML content) from the author's PDS.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `articleSlug` | `string` | The article's rkey / slug |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+---
+
+### `toSlug`
+
+```ts
+function toSlug(domain: string): string
+```
+
+Derives a site slug from a domain name by replacing `.` with `-` and removing non-alphanumeric characters.
+
+```ts
+toSlug('norobots.blog')        // → "norobots-blog"
+toSlug('anthonycregan.co.uk')  // → "anthonycregan-co-uk"
+```
+
+---
+
+### `slugFromUri`
+
+```ts
+function slugFromUri(uri: string): string
+```
+
+Extracts the rkey (slug) from an AT URI.
+
+```ts
+slugFromUri('at://did:plc:abc/app.scribe.article/my-post') // → "my-post"
+```
+
+---
+
+### `flattenArticles`
+
+```ts
+function flattenArticles(
+  groups: Array<{ articles: ArticleRef[] }>
+): ArticleRef[]
+```
+
+Flattens all `ArticleRef` objects from all groups into a single ordered array.
+
+```ts
+const allArticles = flattenArticles(site.groups);
+```
+
+---
+
+### `generateFeed`
+
+```ts
+function generateFeed(site: Site, options: FeedOptions): string
+```
+
+Returns a complete RSS 2.0 XML string for all published articles in the site.
+
+**`FeedOptions`**
+
+| Property | Type | Required | Description |
+| -------- | ---- | -------- | ----------- |
+| `baseUrl` | `string` | Yes | Your site's origin, e.g. `"https://alice.example.com"` |
+| `feedUrl` | `string` | No | Canonical URL of the feed — used for the `<atom:link>` self-reference |
+| `language` | `string` | No | RSS `<language>` tag. Default: `"en"` |
+| `limit` | `number` | No | Maximum number of items to include |
+
+See the [RSS feeds guide](/developers/guides/rss) for usage examples.
+
+---
+
+### `getSitemapEntries`
+
+```ts
+function getSitemapEntries(
+  site: Site,
+  options: GetSitemapEntriesOptions
+): SitemapEntry[]
+```
+
+Returns an array of sitemap entries for all published articles (plus the site root and group index pages).
+
+**`GetSitemapEntriesOptions`**
+
+| Property | Type | Required | Description |
+| -------- | ---- | -------- | ----------- |
+| `baseUrl` | `string` | Yes | Your site's origin, e.g. `"https://alice.example.com"` |
+
+**`SitemapEntry`**
+
+```ts
+interface SitemapEntry {
+  url: string;
+  lastmod?: string; // ISO 8601 date, e.g. "2024-03-15"
+}
+```
+
+See the [Sitemaps guide](/developers/guides/sitemaps) for usage examples.
+
+---
+
+## Types
+
+### `Site`
+
+```ts
+interface Site {
+  title: string;
+  url: string;          // Domain without protocol, e.g. "alice.bsky.social"
+  urlPrefix: string;    // Path prefix, e.g. "blog" — empty string if content is at root
+  description?: string;
+  splashImageUrl?: string;
+  logoImageUrl?: string;
+  groups: SiteGroup[];
+  ungroupedArticles: ArticleRef[];
+}
+```
+
+### `SiteGroup`
+
+```ts
+interface SiteGroup {
+  slug: string;
+  title: string;
+  articles: ArticleRef[];
+}
+```
+
+### `ArticleRef`
+
+A lightweight snapshot of article metadata, embedded in the site record to avoid N+1 fetch patterns. Does not include `content`.
+
+```ts
+interface ArticleRef {
+  uri: string;            // AT URI, e.g. "at://did:plc:…/app.scribe.article/my-post"
+  title: string;
+  url?: string;           // Article slug / rkey
+  splashImageUrl: string | null;
+  synopsis?: string | null;
+  createdAt: string;      // ISO 8601
+  updatedAt?: string;     // ISO 8601
+}
+```
+
+### `Article`
+
+The full article record, including HTML content. Returned by `fetchArticle`.
+
+```ts
+interface Article {
+  title: string;
+  content: string;        // Sanitised HTML — safe to render directly
+  url: string;            // Article slug / rkey
+  splashImageUrl?: string;
+  synopsis?: string;
+  createdAt: string;      // ISO 8601
+  updatedAt: string;      // ISO 8601
+}
+```
