@@ -1,6 +1,159 @@
 ---
 title: Core Concepts
-description: The AT Protocol identity model and the Scribe content model (Site, Group, Article).
+description: The AT Protocol identity model and the Scribe content model — what you need to understand before writing any code.
 ---
 
-Coming soon.
+import { Aside } from '@astrojs/starlight/components';
+
+This page covers the two models you need to understand before the SDK code makes sense: how AT Protocol handles identity and data storage, and how Scribe organises content on top of it.
+
+---
+
+## AT Protocol basics
+
+Scribe is built on the [AT Protocol](https://atproto.com) — the same open protocol that powers Bluesky. You don't need to know the protocol in depth, but a few concepts come up constantly in the SDK.
+
+### Handle
+
+A **handle** is a human-readable username — for example, `alice.bsky.social` or `anthonycregan.dev`. Authors use their handle to identify themselves.
+
+Handles are convenient but **not stable**. An author can change their handle at any time. For this reason, the SDK always resolves a handle to a DID before fetching any data.
+
+### DID (Decentralized Identifier)
+
+A **DID** is a permanent, globally unique identifier — for example, `did:plc:abc123`. Where a handle is like a display name, a DID is like a passport number: it never changes.
+
+There are two DID types you may encounter:
+
+| Type | Example | How it works |
+| ---- | ------- | ------------ |
+| `did:plc` | `did:plc:abc123` | Managed by the PLC directory at `plc.directory` — the most common type for accounts on bsky.social |
+| `did:web` | `did:web:anthonycregan.dev` | Derived from a domain name; the DID document is fetched from `https://{domain}/.well-known/did.json` |
+
+The SDK accepts either a handle or a DID as the `author` argument to all fetch functions. Handles are resolved to DIDs automatically.
+
+### PDS (Personal Data Server)
+
+The **PDS** is the server that hosts an author's data. All Scribe content — sites, groups, articles — lives on the author's PDS. It may be a shared provider (like bsky.social) or self-hosted.
+
+The SDK discovers the correct PDS for any author by fetching their DID document and reading the `#atproto_pds` service endpoint. This is handled automatically — you never need to look up a PDS URL yourself.
+
+<Aside type="tip">
+  This PDS resolution is why the SDK works correctly for self-hosted instances, not just bsky.social accounts.
+</Aside>
+
+### Collections and AT URIs
+
+Data on a PDS is organised into **collections** — namespaced buckets of records. Scribe uses two:
+
+| Collection | Contains |
+| ---------- | -------- |
+| `app.scribe.site` | Site records (one per site the author manages) |
+| `app.scribe.article` | Article records (one per article the author has written) |
+
+Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, rkeys are slugs: `norobots-blog` for a site, `my-first-post` for an article.
+
+A record's full address is an **AT URI**:
+
+```
+at://{did}/{collection}/{rkey}
+at://did:plc:abc123/app.scribe.article/my-first-post
+```
+
+---
+
+## The Scribe content model
+
+On top of AT Protocol, Scribe defines a simple hierarchy for organising content.
+
+### Site
+
+A **Site** is an author's publication — the top-level container for all their content. It is stored as a single record in the `app.scribe.site` collection.
+
+A Site carries:
+- Metadata: `title`, `description`, `url` (domain), `urlPrefix` (optional path prefix), `logoImageUrl`, `splashImageUrl`
+- A list of **Groups** (published content)
+- A list of **ungrouped articles** (unpublished content)
+
+The `url` and `urlPrefix` together define where the site's content lives:
+
+```
+url: "anthonycregan.co.uk"
+urlPrefix: "blog"
+→ site root: anthonycregan.co.uk/blog
+→ article:   anthonycregan.co.uk/blog/{group-slug}/{article-slug}
+```
+
+When `urlPrefix` is empty, groups are immediate children of the domain:
+
+```
+url: "norobots.blog"
+urlPrefix: ""
+→ article: norobots.blog/{group-slug}/{article-slug}
+```
+
+#### Site slug
+
+The **site slug** is the rkey used to fetch a site record. It is derived automatically from the site's domain by replacing `.` with `-` and stripping non-alphanumeric characters:
+
+```ts
+toSlug("norobots.blog")       // → "norobots-blog"
+toSlug("anthonycregan.co.uk") // → "anthonycregan-co-uk"
+```
+
+`toSlug` is exported from `@scribe-atp/core` so you can derive the correct slug from any domain.
+
+### Group
+
+A **Group** is a named, ordered collection of articles within a Site — a section or category. Groups have a `slug` (URL segment) and a `title`. Their order within the Site is significant.
+
+### Article
+
+An **Article** is a single piece of written content stored in the `app.scribe.article` collection. It contains:
+- `title`, `synopsis`, `content` (full HTML), `url` (slug), `splashImageUrl`
+- `createdAt`, `updatedAt` timestamps
+
+Articles are **site-agnostic** — an article record carries no reference to any Site or Group. The Site record references articles, not the other way around.
+
+### ArticleRef
+
+Fetching a Site gives you the full list of articles without making additional requests — because the Site record contains **ArticleRefs**: lightweight cached snapshots of each article's metadata (title, slug, synopsis, splash image). Only the full `content` field is excluded.
+
+This avoids N+1 fetch patterns: you can render an article list from the Site record alone, then fetch individual articles on demand.
+
+<Aside>
+  `ArticleRef` is a code-level concept for developers. It is not exposed in the Scribe CMS UI — authors just see their articles.
+</Aside>
+
+---
+
+## Publication states
+
+Every article is in one of three states:
+
+| State | Condition | What it means |
+| ----- | --------- | ------------- |
+| **Draft** | Exists on the author's PDS; not referenced in any Site record | The author hasn't associated it with any site yet |
+| **Unpublished** | Referenced in a Site's `ungroupedArticles` | Belongs to a site but not yet placed in a Group |
+| **Published** | Referenced in a Group within a Site | Has a canonical URL on the author's consumer site |
+
+The SDK returns ungrouped articles as `site.ungroupedArticles` and published articles inside `site.groups[n].articles`. How you present each state is up to you.
+
+---
+
+## How the SDK uses this
+
+When you call `fetchSite("alice.bsky.social", "alice-bsky-social")`:
+
+1. The SDK resolves `alice.bsky.social` → a DID (via `plc.directory` or the handle's DNS record)
+2. It fetches the DID document to discover Alice's PDS URL
+3. It fetches the site record from Alice's PDS using XRPC
+4. It returns a typed `Site` object with groups and article refs already embedded
+
+The PDS URL is cached in memory for the lifetime of the page load, so repeated fetches for the same author don't re-fetch the DID document.
+
+---
+
+## Next steps
+
+Now that you have the model in your head, the [Quickstart](/developers/quickstart) shows you how to fetch your first site and article in under 5 minutes.
