@@ -18,7 +18,7 @@ export default defineConfig({
         {
           icon: "npm",
           label: "npm",
-          href: "https://www.npmjs.com/search?q=%40scribe-atp",
+          href: "https://www.npmjs.com/org/scribe-atp",
         },
         {
           icon: "github",
