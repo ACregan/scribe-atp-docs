@@ -1,0 +1,50 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Card, CardGrid } from '@astrojs/starlight/components';
+---
+
+<StarlightPage
+  frontmatter={{
+    title: '<img src="/ScribeATP-LOGO_white.svg" alt="Scribe ATP" class="light:sl-hidden" style="height: 3rem;" /><img src="/ScribeATP-LOGO_dark.svg" alt="Scribe ATP" class="dark:sl-hidden" style="height: 3rem;" />',
+    description: 'Open-source publishing tools built on the AT Protocol. Write once, power any website.',
+    template: 'splash',
+    hero: {
+      tagline: 'Write once. Power any website. Own your content.',
+      actions: [
+        { text: 'Developer docs', link: '/developers/', icon: 'right-arrow' },
+        { text: 'Open Scribe CMS', link: 'https://scribe-cms.app', icon: 'external', variant: 'minimal' },
+      ],
+    },
+  }}
+>
+  <h2>What is Scribe ATP?</h2>
+  <p>
+    Scribe ATP is an open-source publishing stack built on the <a href="https://atproto.com">AT Protocol</a> — the same open protocol that powers Bluesky. Your content lives in your own account and can power any number of websites simultaneously.
+  </p>
+
+  <CardGrid>
+    <Card title="Scribe CMS" icon="pencil">
+      The writing tool. Compose articles, organise them into sites and groups, and control what's published — at <a href="https://scribe-cms.app">scribe-cms.app</a>.
+    </Card>
+    <Card title="Scribe SDK" icon="puzzle">
+      The developer toolkit. TypeScript packages for React, Angular, Vue, Next.js, Nuxt, React Router, and plain TypeScript. Fetch your content in minutes.
+    </Card>
+    <Card title="For authors" icon="open-book">
+      Write and publish without handing your content to a third-party platform. You own everything — no lock-in.
+    </Card>
+    <Card title="For developers" icon="laptop">
+      One SDK, any framework. Add content to an existing site or build a new one from scratch. Full TypeScript support throughout.
+    </Card>
+  </CardGrid>
+
+  <h2>Get started</h2>
+
+  <CardGrid>
+    <Card title="I'm a developer" icon="rocket">
+      Read the <a href="/developers/">Developer Introduction</a> to understand what the SDK does and which package to install. Then follow the <a href="/developers/quickstart">Quickstart</a> to fetch your first content in under 5 minutes.
+    </Card>
+    <Card title="I'm an author" icon="star">
+      Read the <a href="/authors/">Author Introduction</a> to understand how Sites, Groups, and Articles fit together. Then follow <a href="/authors/getting-started">Getting Started</a> to create your first site and publish your first article.
+    </Card>
+  </CardGrid>
+</StarlightPage>
