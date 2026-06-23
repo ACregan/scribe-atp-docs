@@ -14,6 +14,9 @@ export default defineConfig({
         alt: "Scribe ATP",
         replacesTitle: true,
       },
+      components: {
+        Header: "./src/components/Header.astro",
+      },
       social: [
         {
           icon: "npm",
