@@ -39,7 +39,7 @@ function BlogIndex() {
           <ul>
             {group.articles.map((article) => (
               <li key={article.uri}>
-                <a href={`/${group.slug}/${article.url}`}>{article.title}</a>
+                <a href={`/${group.slug}/${article.slug}`}>{article.title}</a>
               </li>
             ))}
           </ul>
@@ -64,7 +64,7 @@ function ArticlePage({ author, slug }: { author: string; slug: string }) {
   return (
     <article>
       <h1>{article.title}</h1>
-      {article.synopsis && <p>{article.synopsis}</p>}
+      {article.description && <p>{article.description}</p>}
       <div dangerouslySetInnerHTML={{ __html: article.content }} />
     </article>
   );

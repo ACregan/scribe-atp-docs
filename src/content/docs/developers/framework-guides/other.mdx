@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ fetch: _, signal }) => {
     <h2>{group.title}</h2>
     <ul>
       {#each group.articles as article}
-        <li><a href="/blog/{group.slug}/{article.url}">{article.title}</a></li>
+        <li><a href="/blog/{group.slug}/{article.slug}">{article.title}</a></li>
       {/each}
     </ul>
   </section>
@@ -66,7 +66,7 @@ const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
     <h2>{group.title}</h2>
     <ul>
       {group.articles.map((article) => (
-        <li><a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a></li>
+        <li><a href={`/blog/${group.slug}/${article.slug}`}>{article.title}</a></li>
       ))}
     </ul>
   </section>
@@ -84,7 +84,7 @@ export async function getStaticPaths() {
   const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
   return site.groups.flatMap((group) =>
     group.articles.map((article) => ({
-      params: { group: group.slug, slug: article.url },
+      params: { group: group.slug, slug: article.slug },
     }))
   );
 }

@@ -29,7 +29,7 @@ console.log(site.urlPrefix);  // e.g. "blog" or ""
 
 for (const group of site.groups) {
   for (const article of group.articles) {
-    console.log(article.title, article.url, article.synopsis);
+    console.log(article.title, article.slug, article.description);
   }
 }
 
@@ -45,7 +45,7 @@ import { fetchArticle } from '@scribe-atp/core';
 const article = await fetchArticle('alice.bsky.social', 'my-first-post');
 
 console.log(article.title);
-console.log(article.synopsis);
+console.log(article.description);
 console.log(article.content);  // Full HTML — safe to render directly
 console.log(article.createdAt);
 ```
@@ -58,7 +58,7 @@ import { toSlug, slugFromUri, flattenArticles } from '@scribe-atp/core';
 toSlug('norobots.blog')     // → "norobots-blog"
 toSlug('alice.bsky.social') // → "alice-bsky-social"
 
-slugFromUri('at://did:plc:abc/app.scribe.article/my-post') // → "my-post"
+slugFromUri('at://did:plc:abc/site.standard.document/my-post') // → "my-post"
 
 // All published articles across all groups, in order
 const allArticles = flattenArticles(site.groups);

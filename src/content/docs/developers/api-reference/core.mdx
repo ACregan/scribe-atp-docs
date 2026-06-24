@@ -74,30 +74,12 @@ function listArticles(
 ): Promise<ArticleRef[]>
 ```
 
-Returns all article records for the given author as lightweight `ArticleRef` objects (no `content` field). Calls `com.atproto.repo.listRecords` for the `app.scribe.article` collection and follows cursor pagination automatically.
+Returns all published article records for the given author as lightweight `ArticleRef` objects (no `content` field). Calls `com.atproto.repo.listRecords` for the `site.standard.document` collection and follows cursor pagination automatically.
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
 | `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
-
-To determine the publication state of each article, cross-reference with `listSites`:
-
-```ts
-const [sites, articles] = await Promise.all([
-  listSites(author),
-  listArticles(author),
-]);
-
-const referencedUris = new Set(
-  sites.flatMap((s) => [
-    ...s.groups.flatMap((g) => g.articles),
-    ...s.ungroupedArticles,
-  ]).map((a) => a.uri)
-);
-
-const drafts = articles.filter((a) => !referencedUris.has(a.uri));
-```
 
 Call `fetchArticle` to retrieve the full `content` for any article.
 
@@ -127,7 +109,7 @@ function slugFromUri(uri: string): string
 Extracts the rkey (slug) from an AT URI.
 
 ```ts
-slugFromUri('at://did:plc:abc/app.scribe.article/my-post') // → "my-post"
+slugFromUri('at://did:plc:abc/site.standard.document/my-post') // → "my-post"
 ```
 
 ---
@@ -232,12 +214,14 @@ A lightweight snapshot of article metadata, embedded in the site record to avoid
 
 ```ts
 interface ArticleRef {
-  uri: string;            // AT URI, e.g. "at://did:plc:…/app.scribe.article/my-post"
+  uri: string;            // AT URI, e.g. "at://did:plc:…/site.standard.document/my-post"
   title: string;
-  url?: string;           // Article slug / rkey
+  slug?: string;          // Article slug / rkey
   splashImageUrl: string | null;
-  synopsis?: string | null;
+  description?: string | null;
+  tags?: string[];
   createdAt: string;      // ISO 8601
+  publishedAt?: string;   // ISO 8601
   updatedAt?: string;     // ISO 8601
 }
 ```
@@ -250,10 +234,13 @@ The full article record, including HTML content. Returned by `fetchArticle`.
 interface Article {
   title: string;
   content: string;        // Sanitised HTML — safe to render directly
-  url: string;            // Article slug / rkey
+  path: string;           // e.g. "/blog/2024/my-first-post"
+  site: string;           // Canonical site URL
   splashImageUrl?: string;
-  synopsis?: string;
+  description?: string;
+  tags?: string[];
   createdAt: string;      // ISO 8601
+  publishedAt: string;    // ISO 8601
   updatedAt: string;      // ISO 8601
 }
 ```

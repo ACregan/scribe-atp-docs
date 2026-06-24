@@ -49,7 +49,8 @@ Data on a PDS is organised into **collections** — namespaced buckets of record
 | Collection | Contains |
 | ---------- | -------- |
 | `app.scribe.site` | Site records (one per site the author manages) |
-| `app.scribe.article` | Article records (one per article the author has written) |
+| `site.standard.document` | Published article records |
+| `app.scribe.article` | Draft article records (not yet published) |
 
 Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, rkeys are slugs: `norobots-blog` for a site, `my-first-post` for an article.
 
@@ -57,7 +58,7 @@ A record's full address is an **AT URI**:
 
 ```
 at://{did}/{collection}/{rkey}
-at://did:plc:abc123/app.scribe.article/my-first-post
+at://did:plc:abc123/site.standard.document/my-first-post
 ```
 
 ---
@@ -109,15 +110,15 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 
 ### Article
 
-An **Article** is a single piece of written content stored in the `app.scribe.article` collection. It contains:
-- `title`, `synopsis`, `content` (full HTML), `url` (slug), `splashImageUrl`
-- `createdAt`, `updatedAt` timestamps
+An **Article** is a single piece of written content. Published articles are stored in the `site.standard.document` collection; drafts (not yet published) live in `app.scribe.article`. It contains:
+- `title`, `description`, `content` (full HTML), `path` (full URL path), `splashImageUrl`
+- `createdAt`, `publishedAt`, `updatedAt` timestamps
 
-Articles are **site-agnostic** — an article record carries no reference to any Site or Group. The Site record references articles, not the other way around.
+The Site record references articles, not the other way around.
 
 ### ArticleRef
 
-Fetching a Site gives you the full list of articles without making additional requests — because the Site record contains **ArticleRefs**: lightweight cached snapshots of each article's metadata (title, slug, synopsis, splash image). Only the full `content` field is excluded.
+Fetching a Site gives you the full list of articles without making additional requests — because the Site record contains **ArticleRefs**: lightweight cached snapshots of each article's metadata (title, slug, description, splash image). Only the full `content` field is excluded.
 
 This avoids N+1 fetch patterns: you can render an article list from the Site record alone, then fetch individual articles on demand.
 

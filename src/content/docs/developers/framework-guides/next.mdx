@@ -44,7 +44,7 @@ export default async function BlogPage() {
           <ul>
             {group.articles.map((article) => (
               <li key={article.uri}>
-                <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+                <a href={`/blog/${group.slug}/${article.slug}`}>{article.title}</a>
               </li>
             ))}
           </ul>
@@ -76,7 +76,7 @@ export default async function GroupPage({ params }: { params: { group: string } 
       <ul>
         {group.articles.map((article) => (
           <li key={article.uri}>
-            <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+            <a href={`/blog/${group.slug}/${article.slug}`}>{article.title}</a>
           </li>
         ))}
       </ul>
@@ -100,7 +100,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   return (
     <article>
       <h1>{article.title}</h1>
-      {article.synopsis && <p>{article.synopsis}</p>}
+      {article.description && <p>{article.description}</p>}
       <div dangerouslySetInnerHTML={{ __html: article.content }} />
     </article>
   );

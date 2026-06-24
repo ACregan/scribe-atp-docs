@@ -46,7 +46,7 @@ This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're
    for (const group of site.groups) {
      console.log(group.title);
      for (const article of group.articles) {
-       console.log(article.title, article.url);
+       console.log(article.title, article.slug);
      }
    }
 
@@ -70,7 +70,7 @@ This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're
    const article = await fetchArticle('anthonycregan.dev', 'my-first-post');
 
    console.log(article.title);
-   console.log(article.synopsis);
+   console.log(article.description);
    console.log(article.content); // Full HTML — safe to render directly
    console.log(article.createdAt);
    ```
