@@ -42,7 +42,7 @@ const { data: site, pending, error } = await useScribeSite(
       <h2>{{ group.title }}</h2>
       <ul>
         <li v-for="article in group.articles" :key="article.uri">
-          <NuxtLink :to="`/blog/${group.slug}/${article.url}`">{{ article.title }}</NuxtLink>
+          <NuxtLink :to="`/blog/${group.slug}/${article.slug}`">{{ article.title }}</NuxtLink>
         </li>
       </ul>
     </section>
@@ -67,7 +67,7 @@ const { data: article, pending, error } = await useScribeArticle(
   <p v-else-if="error">Error: {{ error.message }}</p>
   <article v-else-if="article">
     <h1>{{ article.title }}</h1>
-    <p v-if="article.synopsis">{{ article.synopsis }}</p>
+    <p v-if="article.description">{{ article.description }}</p>
     <div v-html="article.content" />
   </article>
 </template>

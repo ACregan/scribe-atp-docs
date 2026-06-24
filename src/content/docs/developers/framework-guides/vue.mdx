@@ -37,7 +37,7 @@ const { site, loading, error } = useScribeSite('alice.bsky.social', toSlug('alic
       <h2>{{ group.title }}</h2>
       <ul>
         <li v-for="article in group.articles" :key="article.uri">
-          <a :href="`/${group.slug}/${article.url}`">{{ article.title }}</a>
+          <a :href="`/${group.slug}/${article.slug}`">{{ article.title }}</a>
         </li>
       </ul>
     </section>
@@ -60,7 +60,7 @@ const { article, loading, error } = useScribeArticle(props.author, props.slug);
   <p v-else-if="error">Error: {{ error.message }}</p>
   <article v-else-if="article">
     <h1>{{ article.title }}</h1>
-    <p v-if="article.synopsis">{{ article.synopsis }}</p>
+    <p v-if="article.description">{{ article.description }}</p>
     <div v-html="article.content" />
   </article>
 </template>

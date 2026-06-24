@@ -12,20 +12,20 @@ A Scribe `Site` record carries two URL-related fields that together define the r
 | `site.url` | `"anthonycregan.co.uk"` | The site's domain (no protocol) |
 | `site.urlPrefix` | `"blog"` | Path prefix for content — empty string if content is at the root |
 
-An article's own slug lives in `article.url` (on an `ArticleRef`) or `article.url` (on a full `Article`).
+An article's own slug lives in `article.slug` on an `ArticleRef`.
 
 ## Article URL pattern
 
 The canonical URL for a published article is:
 
 ```
-https://{site.url}/{site.urlPrefix}/{group.slug}/{article.url}
+https://{site.url}/{site.urlPrefix}/{group.slug}/{article.slug}
 ```
 
 When `urlPrefix` is empty, the pattern is:
 
 ```
-https://{site.url}/{group.slug}/{article.url}
+https://{site.url}/{group.slug}/{article.slug}
 ```
 
 ## Helper function
@@ -46,7 +46,7 @@ function articleUrl(site: Site, groupSlug: string, articleSlug: string): string 
 Usage:
 
 ```ts
-const url = articleUrl(site, group.slug, article.url);
+const url = articleUrl(site, group.slug, article.slug);
 // e.g. "https://anthonycregan.co.uk/blog/2024/my-first-post"
 //   or "https://norobots.blog/2024/my-first-post"
 ```
@@ -76,7 +76,7 @@ If you have an AT URI and need the article slug (rkey), use `slugFromUri`:
 ```ts
 import { slugFromUri } from '@scribe-atp/core';
 
-slugFromUri('at://did:plc:abc123/app.scribe.article/my-first-post')
+slugFromUri('at://did:plc:abc123/site.standard.document/my-first-post')
 // → "my-first-post"
 ```
 

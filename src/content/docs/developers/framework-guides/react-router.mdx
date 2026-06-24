@@ -40,7 +40,7 @@ export default function Blog() {
           <ul>
             {group.articles.map((article) => (
               <li key={article.uri}>
-                <a href={`/blog/${group.slug}/${article.url}`}>{article.title}</a>
+                <a href={`/blog/${group.slug}/${article.slug}`}>{article.title}</a>
               </li>
             ))}
           </ul>

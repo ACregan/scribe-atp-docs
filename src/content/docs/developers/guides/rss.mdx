@@ -92,7 +92,7 @@ const xml = generateFeed(site, {
 
 Each feed item contains:
 - `<title>` — from `article.title`
-- `<description>` — from `article.synopsis` (when set)
+- `<description>` — from `article.description` (when set)
 - `<link>` — the canonical article URL, built from the site's `url` and `urlPrefix`
 - `<pubDate>` — from `article.createdAt`
 - `<guid>` — the article's AT URI (stable across URL changes)
