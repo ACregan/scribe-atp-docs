@@ -8,7 +8,7 @@ description: API reference for @scribe-atp/vue — useScribeSite and useScribeAr
 ### `useScribeSite`
 
 ```ts
-function useScribeSite(author: string, siteSlug: string): UseScribeSiteResult
+function useScribeSite(author: string, publicationUrl: string): UseScribeSiteResult
 
 interface UseScribeSiteResult {
   site: Ref<Site | null>;
@@ -22,7 +22,7 @@ Fetches a site when the composable is called and aborts the request when the hos
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 
 While loading, `site.value` is `null` and `loading.value` is `true`. On error, `error.value` is set. `AbortError` is swallowed.
 

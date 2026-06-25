@@ -52,13 +52,13 @@ Data on a PDS is organised into **collections** — namespaced buckets of record
 | `site.standard.document` | Published article records |
 | `app.scribe.article` | Draft article records (not yet published) |
 
-Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, rkeys are slugs: `norobots-blog` for a site, `my-first-post` for an article.
+Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, article rkeys are slugs (e.g. `my-first-post`). Publication rkeys are opaque TIDs (e.g. `3mp4nd46xwr2h`) assigned by the AT Protocol.
 
 A record's full address is an **AT URI**:
 
 ```
 at://{did}/{collection}/{rkey}
-at://did:plc:abc123/site.standard.publication/norobots-blog
+at://did:plc:abc123/site.standard.publication/3mp4nd46xwr2h
 at://did:plc:abc123/site.standard.document/my-first-post
 ```
 
@@ -94,16 +94,18 @@ urlPrefix: ""
 → article: norobots.blog/{group-slug}/{article-slug}
 ```
 
-#### Site slug
+#### Looking up a publication
 
-The **site slug** is the rkey used to fetch a site record. It is derived automatically from the site's domain by replacing `.` with `-` and stripping non-alphanumeric characters:
+The SDK looks up a publication record by the site's canonical HTTPS URL. Pass the full URL as the second argument to `fetchSite`:
 
 ```ts
-toSlug("norobots.blog")       // → "norobots-blog"
-toSlug("anthonycregan.co.uk") // → "anthonycregan-co-uk"
+await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
+await fetchSite('anthonycregan.dev', 'https://norobots.blog');
 ```
 
-`toSlug` is exported from `@scribe-atp/core` so you can derive the correct slug from any domain.
+Internally the SDK scans the author's `site.standard.publication` collection and finds the record whose `url` field matches. Publication rkeys are opaque TIDs (`3mp4nd46xwr2h`) — you do not need to know or construct them.
+
+The `scribe.slug` field still exists on publication records and is used by Scribe CMS for routing and display purposes, but the public SDK API works entirely from the canonical URL.
 
 ### Group
 
@@ -147,11 +149,11 @@ The SDK returns ungrouped articles as `site.ungroupedArticles` and published art
 
 ## How the SDK uses this
 
-When you call `fetchSite("alice.bsky.social", "alice-bsky-social")`:
+When you call `fetchSite("alice.bsky.social", "https://alice.bsky.social")`:
 
 1. The SDK resolves `alice.bsky.social` → a DID (via `plc.directory` or the handle's DNS record)
 2. It fetches the DID document to discover Alice's PDS URL
-3. It fetches the site record from Alice's PDS using XRPC
+3. It scans Alice's `site.standard.publication` collection and finds the record matching the URL
 4. It returns a typed `Site` object with groups and article refs already embedded
 
 The PDS URL is cached in memory for the lifetime of the page load, so repeated fetches for the same author don't re-fetch the DID document.

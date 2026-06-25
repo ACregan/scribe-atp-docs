@@ -8,7 +8,7 @@ description: API reference for @scribe-atp/react — useSite and useArticle hook
 ### `useSite`
 
 ```ts
-function useSite(author: string, siteSlug: string): UseSiteResult
+function useSite(author: string, publicationUrl: string): UseSiteResult
 
 interface UseSiteResult {
   site: Site | null;
@@ -17,12 +17,12 @@ interface UseSiteResult {
 }
 ```
 
-Fetches a site on mount and re-fetches whenever `author` or `siteSlug` changes. Aborts the in-flight request on unmount and on parameter change.
+Fetches a site on mount and re-fetches whenever `author` or `publicationUrl` changes. Aborts the in-flight request on unmount and on parameter change.
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 
 While loading, `site` is `null` and `loading` is `true`. On error, `site` remains `null` and `error` is set. `AbortError` is swallowed and does not set `error`.
 
@@ -58,6 +58,8 @@ import { toSlug } from '@scribe-atp/react';
 ```
 
 See [`toSlug` in the core reference](/developers/api-reference/core#toslug) for details.
+
+Note: `toSlug` is no longer needed when calling `useSite` — pass the canonical HTTPS URL directly as the second argument.
 
 ---
 

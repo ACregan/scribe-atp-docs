@@ -12,7 +12,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 ```ts
 import { fetchSite, getSitemapEntries } from '@scribe-atp/core';
 
-const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 const entries = getSitemapEntries(site, { baseUrl: 'https://alice.example.com' });
 
 // entries is: Array<{ url: string; lastmod?: string }>
@@ -28,7 +28,7 @@ const entries = getSitemapEntries(site, { baseUrl: 'https://alice.example.com' }
 
     export async function loader({ request }: { request: Request }) {
       const origin = new URL(request.url).origin;
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
       const entries = getSitemapEntries(site, { baseUrl: origin });
 
       const xml = [
@@ -54,7 +54,7 @@ const entries = getSitemapEntries(site, { baseUrl: 'https://alice.example.com' }
 
     export async function GET(request: Request) {
       const origin = new URL(request.url).origin;
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
       const entries = getSitemapEntries(site, { baseUrl: origin });
 
       const xml = [
@@ -80,7 +80,7 @@ const entries = getSitemapEntries(site, { baseUrl: 'https://alice.example.com' }
     import type { RequestHandler } from './$types';
 
     export const GET: RequestHandler = async ({ url }) => {
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
       const entries = getSitemapEntries(site, { baseUrl: url.origin });
 
       const xml = [

@@ -14,7 +14,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 ```ts
 import { fetchSite, generateFeed } from '@scribe-atp/core';
 
-const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 const xml = generateFeed(site, {
   baseUrl: 'https://alice.example.com',
   feedUrl: 'https://alice.example.com/feed.xml',
@@ -33,7 +33,7 @@ const xml = generateFeed(site, {
 
     export async function loader({ request }: { request: Request }) {
       const origin = new URL(request.url).origin;
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
       const xml = generateFeed(site, {
         baseUrl: origin,
         feedUrl: `${origin}/feed.xml`,
@@ -51,7 +51,7 @@ const xml = generateFeed(site, {
 
     export async function GET(request: Request) {
       const origin = new URL(request.url).origin;
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
       const xml = generateFeed(site, {
         baseUrl: origin,
         feedUrl: `${origin}/feed.xml`,
@@ -69,7 +69,7 @@ const xml = generateFeed(site, {
     import type { RequestHandler } from './$types';
 
     export const GET: RequestHandler = async ({ url }) => {
-      const site = await fetchSite('alice.bsky.social', 'alice-bsky-social');
+      const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
       const xml = generateFeed(site, {
         baseUrl: url.origin,
         feedUrl: `${url.origin}/feed.xml`,

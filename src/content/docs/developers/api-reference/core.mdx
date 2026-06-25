@@ -10,7 +10,7 @@ description: Complete API reference for @scribe-atp/core — functions, types, a
 ```ts
 function fetchSite(
   author: string,
-  siteSlug: string,
+  publicationUrl: string,
   signal?: AbortSignal
 ): Promise<Site>
 ```
@@ -20,7 +20,7 @@ Fetches a site record from the author's PDS. Resolves the author handle to a DID
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle (`alice.bsky.social`) or DID (`did:plc:…`) |
-| `siteSlug` | `string` | The site's rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 | `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
 
 ---
@@ -91,12 +91,14 @@ Call `fetchArticle` to retrieve the full `content` for any article.
 function toSlug(domain: string): string
 ```
 
-Derives a site slug from a domain name by replacing `.` with `-` and removing non-alphanumeric characters.
+Derives a slug from a domain name by replacing `.` with `-` and removing non-alphanumeric characters.
 
 ```ts
 toSlug('norobots.blog')        // → "norobots-blog"
 toSlug('anthonycregan.co.uk')  // → "anthonycregan-co-uk"
 ```
+
+`toSlug` is no longer needed for SDK calls — `fetchSite`, `fetchArticleBySlug`, and `resolvePublicationUri` now take a full HTTPS URL instead of a slug. It remains exported for any other use where slug-style strings are useful.
 
 ---
 
@@ -252,7 +254,7 @@ A `Site` with the AT URI of its underlying record included. Returned by `listSit
 
 ```ts
 interface SiteRecord extends Site {
-  uri: string;  // AT URI, e.g. "at://did:plc:…/site.standard.publication/norobots-blog"
+  uri: string;  // AT URI, e.g. "at://did:plc:…/site.standard.publication/3mp4nd46xwr2h"
 }
 ```
 

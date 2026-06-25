@@ -31,13 +31,13 @@ This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're
 
 2. **Fetch a site**
 
-   A site is identified by two things: the author's handle (or DID) and the site slug. The site slug is derived from the author's domain using `toSlug`.
+   A site is identified by two things: the author's handle (or DID) and the site's canonical HTTPS URL.
 
    ```ts
-   import { fetchSite, toSlug } from '@scribe-atp/core';
+   import { fetchSite } from '@scribe-atp/core';
 
    const author = 'anthonycregan.dev';
-   const site = await fetchSite(author, toSlug('anthonycregan.co.uk'));
+   const site = await fetchSite(author, 'https://anthonycregan.co.uk');
 
    console.log(site.title);
    console.log(site.description);
@@ -53,12 +53,6 @@ This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're
    // Unpublished articles (not yet assigned to a group)
    console.log(site.ungroupedArticles);
    ```
-
-   <Aside type="tip">
-     `toSlug` derives the site slug from a domain by replacing `.` with `-`:
-     `toSlug("norobots.blog")` → `"norobots-blog"`.
-     The slug matches the rkey the author used when creating the site in Scribe CMS.
-   </Aside>
 
 3. **Fetch an article**
 
@@ -97,7 +91,7 @@ This guide uses `@scribe-atp/core` — the framework-agnostic package. If you're
    ```ts
    const controller = new AbortController();
 
-   const site = await fetchSite(author, siteSlug, controller.signal);
+   const site = await fetchSite(author, 'https://anthonycregan.co.uk', controller.signal);
 
    // Cancel the request if needed (e.g. component unmount, route change)
    controller.abort();

@@ -10,7 +10,7 @@ description: API reference for @scribe-atp/react-router-framework — loader fac
 ```ts
 function createSiteLoader(
   author: string,
-  siteSlug: string
+  publicationUrl: string
 ): (args: LoaderFunctionArgs) => Promise<Site>
 ```
 
@@ -19,11 +19,11 @@ Returns a React Router loader function that fetches a site. The loader passes `r
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 
 ```ts
 // app/routes/blog.tsx
-export const loader = createSiteLoader('alice.bsky.social', 'alice-bsky-social');
+export const loader = createSiteLoader('alice.bsky.social', 'https://alice.bsky.social');
 ```
 
 ---

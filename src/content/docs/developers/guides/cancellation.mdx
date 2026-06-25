@@ -8,7 +8,7 @@ import { Aside } from '@astrojs/starlight/components';
 `fetchSite` and `fetchArticle` both accept an optional `AbortSignal` as a third argument. When the signal fires, any in-flight HTTP requests are cancelled immediately.
 
 ```ts
-fetchSite(author, siteSlug, signal?)
+fetchSite(author, publicationUrl, signal?)
 fetchArticle(author, articleSlug, signal?)
 ```
 
@@ -39,7 +39,7 @@ Pass `request.signal` directly from the incoming request:
 ```ts
 // React Router v7
 export async function loader({ request }: LoaderFunctionArgs) {
-  return fetchSite('alice.bsky.social', 'alice-bsky-social', request.signal);
+  return fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
 }
 
 // Next.js App Router
@@ -55,7 +55,7 @@ Create an `AbortController` and abort when needed:
 ```ts
 // Cancel on component unmount (vanilla JS)
 const controller = new AbortController();
-const site = await fetchSite('alice.bsky.social', 'alice-bsky-social', controller.signal);
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', controller.signal);
 
 // Later — component unmounts or user navigates away:
 controller.abort();
@@ -67,7 +67,7 @@ In React you can do this inside `useEffect`:
 useEffect(() => {
   const controller = new AbortController();
 
-  fetchSite('alice.bsky.social', 'alice-bsky-social', controller.signal)
+  fetchSite('alice.bsky.social', 'https://alice.bsky.social', controller.signal)
     .then(setSite)
     .catch((err) => {
       if (err.name !== 'AbortError') throw err;
@@ -87,7 +87,7 @@ When a signal fires, the rejected promise contains an `AbortError`. Always check
 
 ```ts
 try {
-  const site = await fetchSite(author, siteSlug, controller.signal);
+  const site = await fetchSite(author, publicationUrl, controller.signal);
 } catch (err) {
   if (err instanceof Error && err.name === 'AbortError') {
     return; // normal — request was cancelled
