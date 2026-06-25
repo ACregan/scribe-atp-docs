@@ -18,9 +18,9 @@ npm install @scribe-atp/core
 ## Fetch a site
 
 ```ts
-import { fetchSite, toSlug } from '@scribe-atp/core';
+import { fetchSite } from '@scribe-atp/core';
 
-const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 
 console.log(site.title);
 console.log(site.description);
@@ -53,10 +53,7 @@ console.log(article.createdAt);
 ## Utilities
 
 ```ts
-import { toSlug, slugFromUri, flattenArticles } from '@scribe-atp/core';
-
-toSlug('norobots.blog')     // → "norobots-blog"
-toSlug('alice.bsky.social') // → "alice-bsky-social"
+import { slugFromUri, flattenArticles } from '@scribe-atp/core';
 
 slugFromUri('at://did:plc:abc/site.standard.document/my-post') // → "my-post"
 
@@ -70,11 +67,11 @@ Both functions accept an optional `AbortSignal` as a third argument:
 
 ```ts
 // Server context — cancel if the user navigates away
-const site = await fetchSite(author, siteSlug, request.signal);
+const site = await fetchSite(author, 'https://alice.bsky.social', request.signal);
 
 // Client context — cancel on unmount or parameter change
 const controller = new AbortController();
-const site = await fetchSite(author, siteSlug, controller.signal);
+const site = await fetchSite(author, 'https://alice.bsky.social', controller.signal);
 controller.abort(); // cancel
 ```
 

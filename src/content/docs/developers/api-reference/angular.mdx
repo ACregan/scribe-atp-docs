@@ -19,13 +19,13 @@ const scribe = inject(ScribeService);
 #### `getSite`
 
 ```ts
-getSite(author: string, siteSlug: string): Observable<Site>
+getSite(author: string, publicationUrl: string): Observable<Site>
 ```
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 
 Returns a cold Observable. Subscribe with the `async` pipe for automatic unsubscription on component destroy.
 
@@ -47,7 +47,7 @@ getArticle(author: string, articleSlug: string): Observable<Article>
 ### `injectSite`
 
 ```ts
-function injectSite(author: string, siteSlug: string): {
+function injectSite(author: string, publicationUrl: string): {
   site: Signal<Site | null>;
   loading: Signal<boolean>;
   error: Signal<Error | null>;
@@ -59,7 +59,7 @@ Injection function (must be called in an injection context). Fetches a site imme
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 
 ---
 

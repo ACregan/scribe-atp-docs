@@ -23,7 +23,7 @@ Once registered, `useScribeSite` and `useScribeArticle` are available in all com
 ```ts
 function useScribeSite(
   author: string,
-  siteSlug: string,
+  publicationUrl: string,
   options?: AsyncDataOptions
 ): Promise<AsyncData<Site | null, Error | null>>
 ```
@@ -33,7 +33,7 @@ Wraps `fetchSite` with `useAsyncData`. The composable is SSR-safe: data is fetch
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `siteSlug` | `string` | Site rkey — derive with `toSlug(domain)` |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 | `options` | `AsyncDataOptions` | Optional. Forwarded to `useAsyncData` — `lazy`, `server`, `watch`, etc. |
 
 Returns `{ data, pending, error, refresh }` — the standard Nuxt `AsyncData` shape. `data` holds `Site | null`.

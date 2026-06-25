@@ -47,7 +47,7 @@ Requires Angular 16 or later.
       `,
     })
     export class BlogComponent {
-      site$ = inject(ScribeService).getSite('alice.bsky.social', 'alice-bsky-social');
+      site$ = inject(ScribeService).getSite('alice.bsky.social', 'https://alice.bsky.social');
     }
     ```
   </TabItem>
@@ -102,7 +102,7 @@ Injection functions return `{ site, loading, error }` as readonly signals. The f
       `,
     })
     export class BlogComponent {
-      vm = injectSite('alice.bsky.social', 'alice-bsky-social');
+      vm = injectSite('alice.bsky.social', 'https://alice.bsky.social');
     }
     ```
   </TabItem>

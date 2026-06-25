@@ -9,11 +9,11 @@ For **SvelteKit**, **Astro**, **Remix**, or any other framework with server-side
 
 ```ts
 // src/routes/blog/+page.server.ts
-import { fetchSite, toSlug } from '@scribe-atp/core';
+import { fetchSite } from '@scribe-atp/core';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch: _, signal }) => {
-  const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'), signal);
+  const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social', signal);
   return { site };
 };
 ```
@@ -55,9 +55,9 @@ export const load = async ({ params, fetch: _ }) => {
 ```astro
 ---
 // src/pages/blog/index.astro
-import { fetchSite, toSlug } from '@scribe-atp/core';
+import { fetchSite } from '@scribe-atp/core';
 
-const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 ---
 
 <h1>{site.title}</h1>
@@ -78,10 +78,10 @@ For dynamic article pages, use `getStaticPaths`:
 ```astro
 ---
 // src/pages/blog/[group]/[slug].astro
-import { fetchSite, fetchArticle, toSlug, flattenArticles } from '@scribe-atp/core';
+import { fetchSite, fetchArticle, flattenArticles } from '@scribe-atp/core';
 
 export async function getStaticPaths() {
-  const site = await fetchSite('alice.bsky.social', toSlug('alice.bsky.social'));
+  const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
   return site.groups.flatMap((group) =>
     group.articles.map((article) => ({
       params: { group: group.slug, slug: article.slug },

@@ -29,7 +29,7 @@ That's it — `useScribeSite` and `useScribeArticle` are now available in any co
 <script setup lang="ts">
 const { data: site, pending, error } = await useScribeSite(
   'alice.bsky.social',
-  'alice-bsky-social'
+  'https://alice.bsky.social'
 );
 </script>
 
@@ -78,7 +78,7 @@ const { data: article, pending, error } = await useScribeArticle(
 Both composables accept an optional third argument that is forwarded to `useAsyncData`:
 
 ```ts
-const { data: site } = await useScribeSite('alice.bsky.social', 'alice-bsky-social', {
+const { data: site } = await useScribeSite('alice.bsky.social', 'https://alice.bsky.social', {
   lazy: true,          // don't block navigation
   server: false,       // client-only fetch
 });
