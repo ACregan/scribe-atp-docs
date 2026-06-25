@@ -48,7 +48,7 @@ Data on a PDS is organised into **collections** — namespaced buckets of record
 
 | Collection | Contains |
 | ---------- | -------- |
-| `app.scribe.site` | Site records (one per site the author manages) |
+| `site.standard.publication` | Site records (one per site the author manages) |
 | `site.standard.document` | Published article records |
 | `app.scribe.article` | Draft article records (not yet published) |
 
@@ -58,6 +58,7 @@ A record's full address is an **AT URI**:
 
 ```
 at://{did}/{collection}/{rkey}
+at://did:plc:abc123/site.standard.publication/norobots-blog
 at://did:plc:abc123/site.standard.document/my-first-post
 ```
 
@@ -69,7 +70,7 @@ On top of AT Protocol, Scribe defines a simple hierarchy for organising content.
 
 ### Site
 
-A **Site** is an author's publication — the top-level container for all their content. It is stored as a single record in the `app.scribe.site` collection.
+A **Site** is an author's publication — the top-level container for all their content. It is stored as a single record in the `site.standard.publication` collection.
 
 A Site carries:
 - Metadata: `title`, `description`, `url` (domain), `urlPrefix` (optional path prefix), `logoImageUrl`, `splashImageUrl`
@@ -112,6 +113,8 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 
 An **Article** is a single piece of written content. Published articles are stored in the `site.standard.document` collection; drafts (not yet published) live in `app.scribe.article`. It contains:
 - `title`, `description`, `content` (full HTML), `path` (full URL path), `splashImageUrl`
+- `site` — AT URI of the canonical `site.standard.publication` record
+- `canonicalUrl` — fully-qualified URL, e.g. `https://myblog.com/blog/creative-writing/my-article`
 - `createdAt`, `publishedAt`, `updatedAt` timestamps
 
 The Site record references articles, not the other way around.

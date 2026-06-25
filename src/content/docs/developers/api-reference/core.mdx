@@ -54,7 +54,7 @@ function listSites(
 ): Promise<SiteRecord[]>
 ```
 
-Returns all site records for the given author. Calls `com.atproto.repo.listRecords` for the `app.scribe.site` collection and follows cursor pagination automatically.
+Returns all site records for the given author. Calls `com.atproto.repo.listRecords` for the `site.standard.publication` collection and follows cursor pagination automatically.
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
@@ -235,7 +235,8 @@ interface Article {
   title: string;
   content: string;        // Sanitised HTML — safe to render directly
   path: string;           // e.g. "/blog/2024/my-first-post"
-  site: string;           // Canonical site URL
+  site: string;           // AT URI of the site.standard.publication record
+  canonicalUrl?: string;  // Fully-qualified URL, e.g. "https://myblog.com/blog/creative-writing/my-article"
   splashImageUrl?: string;
   description?: string;
   tags?: string[];
@@ -251,7 +252,7 @@ A `Site` with the AT URI of its underlying record included. Returned by `listSit
 
 ```ts
 interface SiteRecord extends Site {
-  uri: string;  // AT URI, e.g. "at://did:plc:…/app.scribe.site/norobots-blog"
+  uri: string;  // AT URI, e.g. "at://did:plc:…/site.standard.publication/norobots-blog"
 }
 ```
 
