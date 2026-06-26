@@ -49,17 +49,16 @@ Data on a PDS is organised into **collections** — namespaced buckets of record
 | Collection | Contains |
 | ---------- | -------- |
 | `site.standard.publication` | Site records (one per site the author manages) |
-| `site.standard.document` | Published article records |
-| `app.scribe.article` | Draft article records (not yet published) |
+| `site.standard.document` | Article records (draft, unpublished, and published) |
 
-Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, article rkeys are slugs (e.g. `my-first-post`). Publication rkeys are opaque TIDs (e.g. `3mp4nd46xwr2h`) assigned by the AT Protocol.
+Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, both article and publication rkeys are opaque **TIDs** (e.g. `3mp4nd46xwr2h`) assigned by the AT Protocol. An article's human-readable slug is stored in the record's `path` field, not in the rkey.
 
 A record's full address is an **AT URI**:
 
 ```
 at://{did}/{collection}/{rkey}
 at://did:plc:abc123/site.standard.publication/3mp4nd46xwr2h
-at://did:plc:abc123/site.standard.document/my-first-post
+at://did:plc:abc123/site.standard.document/3mp47vvkh342n
 ```
 
 ---
@@ -113,7 +112,7 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 
 ### Article
 
-An **Article** is a single piece of written content. Published articles are stored in the `site.standard.document` collection; drafts (not yet published) live in `app.scribe.article`. It contains:
+An **Article** is a single piece of written content. All articles — whether draft, unpublished, or published — are stored in the `site.standard.document` collection. An article's publication state is determined entirely by whether it appears in a Site record (see [Publication states](#publication-states) below), not by which collection it lives in. It contains:
 - `title`, `description`, `content` (full HTML), `path` (full URL path), `splashImageUrl`
 - `tags` — optional array of author-defined freeform strings for categorisation
 - `contributors` — optional array of `ArticleContributor` objects (DID, role, displayName)
