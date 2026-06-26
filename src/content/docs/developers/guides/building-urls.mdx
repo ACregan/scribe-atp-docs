@@ -69,15 +69,18 @@ await fetchSite('anthonycregan.dev', 'https://norobots.blog');
 
 The `toSlug` utility is still exported from `@scribe-atp/core` for other uses, but it is no longer needed for site lookups.
 
-## Deriving article slugs from AT URIs
+## Article slugs
 
-If you have an AT URI and need the article slug (rkey), use `slugFromUri`:
+An article's human-readable slug is available directly on the `ArticleRef` object returned by `fetchSite`. Use `article.slug` — do not try to derive it from the AT URI.
 
 ```ts
-import { slugFromUri } from '@scribe-atp/core';
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 
-slugFromUri('at://did:plc:abc123/site.standard.document/my-first-post')
-// → "my-first-post"
+for (const group of site.groups) {
+  for (const article of group.articles) {
+    const url = articleUrl(site, group.slug, article.slug);
+  }
+}
 ```
 
-This is useful when working directly with AT Protocol records rather than the normalised `Site` object.
+Article rkeys are opaque TIDs (e.g. `3mp47vvkh342n`) assigned by the PDS. `slugFromUri` returns this TID, which is not the same as the human-readable slug. Prefer `article.slug` over `slugFromUri` when building URLs.
