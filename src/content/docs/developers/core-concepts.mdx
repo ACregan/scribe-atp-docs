@@ -73,7 +73,7 @@ On top of AT Protocol, Scribe defines a simple hierarchy for organising content.
 A **Site** is an author's publication — the top-level container for all their content. It is stored as a single record in the `site.standard.publication` collection.
 
 A Site carries:
-- Metadata: `title`, `description`, `url` (domain), `urlPrefix` (optional path prefix), `logoImageUrl`, `splashImageUrl`
+- Metadata: `title`, `description`, `url` (domain), `urlPrefix` (optional path prefix), `logoImageUrl`, `splashImageUrl`, `icon` (blob)
 - A list of **Groups** (published content)
 - A list of **ungrouped articles** (unpublished content)
 
@@ -115,6 +115,8 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 
 An **Article** is a single piece of written content. Published articles are stored in the `site.standard.document` collection; drafts (not yet published) live in `app.scribe.article`. It contains:
 - `title`, `description`, `content` (full HTML), `path` (full URL path), `splashImageUrl`
+- `tags` — optional array of author-defined freeform strings for categorisation
+- `contributors` — optional array of `ArticleContributor` objects (DID, role, displayName)
 - `site` — AT URI of the canonical `site.standard.publication` record
 - `canonicalUrl` — fully-qualified URL, e.g. `https://myblog.com/blog/creative-writing/my-article`
 - `createdAt`, `publishedAt`, `updatedAt` timestamps
@@ -123,7 +125,7 @@ The Site record references articles, not the other way around.
 
 ### ArticleRef
 
-Fetching a Site gives you the full list of articles without making additional requests — because the Site record contains **ArticleRefs**: lightweight cached snapshots of each article's metadata (title, slug, description, splash image). Only the full `content` field is excluded.
+Fetching a Site gives you the full list of articles without making additional requests — because the Site record contains **ArticleRefs**: lightweight cached snapshots of each article's metadata (title, slug, description, splash image, tags). Only the full `content` field is excluded.
 
 This avoids N+1 fetch patterns: you can render an article list from the Site record alone, then fetch individual articles on demand.
 

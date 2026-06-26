@@ -242,9 +242,22 @@ interface Article {
   splashImageUrl?: string;
   description?: string;
   tags?: string[];
+  contributors?: ArticleContributor[];
   createdAt: string;      // ISO 8601
   publishedAt: string;    // ISO 8601
   updatedAt: string;      // ISO 8601
+}
+```
+
+### `ArticleContributor`
+
+Additional contributors on a published article. Populated via Scribe CMS when the contributor invitation flow is in place; an empty array is written on first publish.
+
+```ts
+interface ArticleContributor {
+  did: string;           // AT Protocol DID of the contributor
+  role?: string;         // e.g. "author", "editor", "illustrator"
+  displayName?: string;  // Human-readable name
 }
 ```
 
