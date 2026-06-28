@@ -1,0 +1,121 @@
+---
+title: Social interactions
+description: Add Like and Subscribe buttons to Scribe articles using @scribe-atp/social.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+`@scribe-atp/social` exports `LikeButton` and `SubscribeButton` — React components that let readers interact with Scribe content on the AT Protocol using their Bluesky account. No server-side setup is required; the components handle the OAuth flow via a popup.
+
+## Install
+
+```bash
+npm install @scribe-atp/social
+```
+
+Requires React 18 or later.
+
+## Getting the AT URIs
+
+Both components need AT URIs — stable identifiers that point to specific AT Protocol records:
+
+- `LikeButton` needs the **document URI**: the AT URI of the `site.standard.document` article record.
+- `SubscribeButton` needs the **publication URI**: the AT URI of the `site.standard.publication` site record.
+
+Your article page loader should fetch both. The exact approach depends on your framework:
+
+<Tabs>
+  <TabItem label="React Router v7">
+    `createArticleRouteLoader` returns `documentUri` alongside the article. Fetch the site separately to get the publication URI:
+
+    ```ts
+    // app/routes/blog.$articleSlug.tsx
+    import { createArticleRouteLoader } from '@scribe-atp/react-router-framework';
+    import { fetchSite } from '@scribe-atp/core';
+    import type { LoaderFunctionArgs } from 'react-router';
+
+    export async function loader({ request, params }: LoaderFunctionArgs) {
+      const [articleData, site] = await Promise.all([
+        createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social')({ request, params }),
+        fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal),
+      ]);
+      return { ...articleData, publicationUri: site.uri };
+    }
+    ```
+  </TabItem>
+  <TabItem label="Next.js App Router">
+    ```ts
+    import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+    const [{ article, uri: documentUri }, site] = await Promise.all([
+      fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', params.slug),
+      fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+    ]);
+
+    // documentUri → LikeButton
+    // site.uri    → SubscribeButton
+    ```
+  </TabItem>
+  <TabItem label="Nuxt 3">
+    ```ts
+    import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+    const route = useRoute();
+    const [{ article, uri: documentUri }, site] = await Promise.all([
+      fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', route.params.slug as string),
+      fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+    ]);
+    ```
+  </TabItem>
+</Tabs>
+
+## Rendering the buttons
+
+Once you have the URIs, render the components in your article template:
+
+```tsx
+import { LikeButton, SubscribeButton } from '@scribe-atp/social';
+
+// In your article component:
+{documentUri && (
+  <LikeButton documentUri={documentUri} title={article.title} />
+)}
+{publicationUri && (
+  <SubscribeButton publicationUri={publicationUri} title="My Site" />
+)}
+```
+
+<Aside>
+  Render the buttons conditionally. `documentUri` is only available once the article is fetched, and some routes (e.g. 404 pages) may not have one.
+</Aside>
+
+## What happens when clicked
+
+1. A `480×640` popup opens at `social.scribe-atp.app` showing the article title (or site name for Subscribe).
+2. The reader authenticates with their Bluesky account via AT Protocol OAuth.
+3. On success, the service writes a `app.bsky.feed.like` or follow record to their repository, then notifies the opener page via `postMessage`.
+4. The button updates immediately to `Liked ✓` or `Subscribed ✓` and the state is saved to `localStorage` — confirmed state persists across page refreshes.
+
+<Aside type="tip">
+  The `postMessage` path is the primary notification mechanism. If a browser blocks cross-origin `postMessage` after the popup closes, the button falls back to polling `/status/:token` for up to 30 seconds.
+</Aside>
+
+## Liked / subscribed state
+
+State is persisted in `localStorage` under:
+- `scribe:recommended:{documentUri}` — `"1"` when liked
+- `scribe:subscribed:{publicationUri}` — `"1"` when subscribed
+
+The components read this on mount, so a returning reader will see the confirmed state immediately without needing to re-authenticate.
+
+The storage utilities are also exported directly if you need to read or set state programmatically:
+
+```ts
+import { isRecommended, isSubscribed } from '@scribe-atp/social';
+
+if (isRecommended(documentUri)) {
+  // already liked
+}
+```
+
+See the [API reference](/developers/api-reference/social) for the full function signatures.

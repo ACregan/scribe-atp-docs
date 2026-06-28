@@ -71,6 +71,14 @@ export default defineConfig({
                   slug: "developers/guides/building-urls",
                 },
                 {
+                  label: "Open Graph meta tags",
+                  slug: "developers/guides/meta-tags",
+                },
+                {
+                  label: "Social interactions",
+                  slug: "developers/guides/social",
+                },
+                {
                   label: "Request cancellation",
                   slug: "developers/guides/cancellation",
                 },
@@ -106,6 +114,10 @@ export default defineConfig({
                 {
                   label: "@scribe-atp/nuxt",
                   slug: "developers/api-reference/nuxt",
+                },
+                {
+                  label: "@scribe-atp/social",
+                  slug: "developers/api-reference/social",
                 },
               ],
             },

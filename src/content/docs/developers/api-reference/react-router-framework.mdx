@@ -1,6 +1,6 @@
 ---
 title: "@scribe-atp/react-router-framework"
-description: API reference for @scribe-atp/react-router-framework — loader factories for React Router v7 framework mode.
+description: API reference for @scribe-atp/react-router-framework — loader factories and meta helpers for React Router v7 framework mode.
 ---
 
 ## Functions
@@ -28,30 +28,121 @@ export const loader = createSiteLoader('alice.bsky.social', 'https://alice.bsky.
 
 ---
 
-### `createArticleLoader`
+### `createArticleRouteLoader`
 
 ```ts
-function createArticleLoader(
+function createArticleRouteLoader(
   author: string,
-  articleSlug: string
-): (args: LoaderFunctionArgs) => Promise<Article>
+  publicationUrl: string,
+  slugParam?: string
+): (args: LoaderFunctionArgs) => Promise<ArticleWithUri>
 ```
 
-Returns a React Router loader function that fetches a single article. Useful when the slug is static (e.g. a featured article). For dynamic slugs from URL params, use `fetchArticle` from `@scribe-atp/core` directly inside your loader.
+Returns a React Router loader function that reads an article slug from URL params, fetches the full article and its AT URI, and returns `ArticleWithUri`. The loader passes `request.signal` automatically.
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
-| `articleSlug` | `string` | Article rkey / slug |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
+| `slugParam` | `string` | Optional. URL param name to read the slug from. Defaults to `"articleSlug"` |
+
+```ts
+// app/routes/blog.$articleSlug.tsx
+export const loader = createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social');
+
+// custom param name:
+export const loader = createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social', 'slug');
+```
+
+The returned loader throws a `404 Response` if the slug param is missing, and an error if the article is not found.
+
+---
+
+### `createWellKnownLoader`
+
+```ts
+function createWellKnownLoader(
+  author: string,
+  publicationUrl: string
+): (args: LoaderFunctionArgs) => Promise<Response>
+```
+
+Returns a React Router loader function that responds with the author's publication AT URI as plain text. Used to serve the `/.well-known/` endpoint required for AT Protocol client discovery.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+
+```ts
+// app/routes/well-known.ts
+export const loader = createWellKnownLoader('alice.bsky.social', 'https://alice.bsky.social');
+```
+
+---
+
+### `articleMeta`
+
+```ts
+function articleMeta(article: Article, site: Site): MetaDescriptor[]
+```
+
+Returns a `MetaDescriptor[]` array ready to spread into a React Router v7 `meta` function. Produces Open Graph and Twitter Card tags for rich link previews.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `article` | `Article` | The full article object |
+| `site` | `Site` | The site object |
+
+```ts
+import { articleMeta } from '@scribe-atp/react-router-framework';
+import type { Route } from './+types/Article';
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  if (!loaderData) return [{ title: 'My Blog' }];
+  return [
+    ...articleMeta(loaderData.article, loaderData.site),
+    { title: `${loaderData.article.title} — My Blog` },
+  ];
+}
+```
+
+The spread comes first so that your explicit `{ title }` at the end takes precedence in the browser tab, while all OG/Twitter tags are populated automatically. See the [Open Graph meta tags guide](/developers/guides/meta-tags) for the full pattern.
+
+---
+
+### `siteMeta`
+
+```ts
+function siteMeta(site: Site): MetaDescriptor[]
+```
+
+Returns `MetaDescriptor[]` for a site index or group page.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
 
 ---
 
 ## Types
 
-All types from `@scribe-atp/core` are re-exported:
+### `ArticleWithUri`
+
+The return type of `createArticleRouteLoader`. Extends `Article` with the AT URI of the article record.
 
 ```ts
-import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react-router-framework';
+interface ArticleWithUri extends Article {
+  documentUri: string;  // AT URI, e.g. "at://did:plc:…/site.standard.document/3abc123"
+}
 ```
 
-See the [core reference](/developers/api-reference/core#types) for type definitions.
+Pass `documentUri` to `@scribe-atp/social`'s `LikeButton` component.
+
+All types from `@scribe-atp/core` are also re-exported:
+
+```ts
+import type { Site, Article, ArticleRef, SiteGroup, ArticleWithUri } from '@scribe-atp/react-router-framework';
+```
+
+See the [core reference](/developers/api-reference/core#types) for full type definitions.

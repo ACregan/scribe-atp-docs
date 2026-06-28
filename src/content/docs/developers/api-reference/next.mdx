@@ -90,6 +90,52 @@ Returns `Metadata` for an article page, including `title`, `description`, and `o
 
 ---
 
+## Standalone helpers
+
+These functions accept `Article`/`Site` objects directly — useful when you're already fetching content and only need the `Metadata` object.
+
+### `articleMetadata`
+
+```ts
+function articleMetadata(article: Article, site: Site): Metadata
+```
+
+Returns a Next.js `Metadata` object for an article page, including `title`, `description`, `openGraph`, and `twitter` fields.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `article` | `Article` | The full article object |
+| `site` | `Site` | The site object |
+
+```ts
+import { articleMetadata } from '@scribe-atp/next';
+import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const [{ article }, site] = await Promise.all([
+    fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', params.slug),
+    fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+  ]);
+  return articleMetadata(article, site);
+}
+```
+
+---
+
+### `siteMetadata`
+
+```ts
+function siteMetadata(site: Site): Metadata
+```
+
+Returns `Metadata` for a site index or group page.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
+
+---
+
 ## Types
 
 All types from `@scribe-atp/core` are re-exported:

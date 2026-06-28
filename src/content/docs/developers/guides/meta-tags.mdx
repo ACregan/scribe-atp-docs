@@ -1,0 +1,172 @@
+---
+title: Open Graph meta tags
+description: Add Open Graph and Twitter Card meta tags to Scribe article pages for rich link previews on Bluesky, X, Slack, and other platforms.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+When you share an article URL on Bluesky, X, Slack, or most social platforms, the platform fetches the page and reads its `<meta>` tags to generate a rich preview — a card with a title, description, and image. Without these tags, links render as plain text.
+
+The Scribe SDK provides helpers that generate the correct Open Graph and Twitter Card tags from the article and site data you've already fetched.
+
+## What gets generated
+
+For an article page, the helpers produce:
+
+| Tag | Value |
+| --- | ----- |
+| `<title>` | `"{Article Title} — {Site Title}"` |
+| `og:type` | `"article"` |
+| `og:title` | Article title |
+| `og:url` | Canonical article URL |
+| `og:site_name` | Site title |
+| `og:description` | Article description (when set) |
+| `og:image` | Splash image URL (when set) |
+| `twitter:card` | `"summary_large_image"` if splash image, otherwise `"summary"` |
+| `twitter:title` | Article title |
+| `twitter:description` | Article description (when set) |
+| `twitter:image` | Splash image URL (when set) |
+
+You provide a `{ title }` override after the spread to keep your own title format in the browser tab while the OG tags get the article title undecorated.
+
+## Framework integration
+
+<Aside>
+  All framework helpers call `generateArticleMeta` from `@scribe-atp/core` internally. The `site` object is required — your article page loader must fetch it alongside the article.
+</Aside>
+
+<Tabs>
+  <TabItem label="React Router v7">
+    Use `articleMeta` from `@scribe-atp/react-router-framework`. It returns `MetaDescriptor[]` for React Router's `meta` export.
+
+    ```ts
+    // app/routes/blog.$articleSlug.tsx
+    import { articleMeta } from '@scribe-atp/react-router-framework';
+    import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+    import type { Route } from './+types/Article';
+
+    export async function loader({ request, params }: Route.LoaderArgs) {
+      const [{ article, uri: documentUri }, site] = await Promise.all([
+        fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', params.articleSlug!, request.signal),
+        fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal),
+      ]);
+      return { article, documentUri, publicationUri: site.uri, site };
+    }
+
+    export function meta({ loaderData }: Route.MetaArgs) {
+      if (!loaderData) return [{ title: 'My Blog' }];
+      return [
+        ...articleMeta(loaderData.article, loaderData.site),
+        { title: `${loaderData.article.title} | My Blog` },
+      ];
+    }
+    ```
+  </TabItem>
+  <TabItem label="Next.js App Router">
+    Use `articleMetadata` from `@scribe-atp/next`. It returns a Next.js `Metadata` object for `generateMetadata`.
+
+    ```ts
+    // app/blog/[groupSlug]/[articleSlug]/page.tsx
+    import { articleMetadata } from '@scribe-atp/next';
+    import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+    export async function generateMetadata({
+      params,
+    }: {
+      params: { articleSlug: string };
+    }) {
+      const [{ article }, site] = await Promise.all([
+        fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', params.articleSlug),
+        fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+      ]);
+      return {
+        ...articleMetadata(article, site),
+        title: `${article.title} — My Blog`,  // override title format if needed
+      };
+    }
+    ```
+
+    The `createScribeSite` factory also generates metadata automatically via `generateArticleMetadata`. Use the standalone `articleMetadata` when you're already fetching content yourself and want full control.
+  </TabItem>
+  <TabItem label="Nuxt 3">
+    Use `articleSeoMeta` from `@scribe-atp/nuxt`. It returns an object shaped for `useSeoMeta()`.
+
+    ```vue
+    <!-- pages/blog/[slug].vue -->
+    <script setup lang="ts">
+    import { articleSeoMeta } from '@scribe-atp/nuxt';
+    import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+    const route = useRoute();
+    const [{ article }, site] = await Promise.all([
+      fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', route.params.slug as string),
+      fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+    ]);
+
+    useSeoMeta(articleSeoMeta(article, site));
+    useHead({ title: `${article.title} — My Blog` });
+    </script>
+    ```
+  </TabItem>
+  <TabItem label="Other frameworks">
+    Use `generateArticleMeta` from `@scribe-atp/core` directly. It returns a `ScribeMetaTag[]` array:
+
+    ```ts
+    import { generateArticleMeta } from '@scribe-atp/core';
+
+    const tags = generateArticleMeta(article, site);
+    // [
+    //   { title: "My Post — My Blog" },
+    //   { property: "og:type", content: "article" },
+    //   { property: "og:title", content: "My Post" },
+    //   { name: "twitter:card", content: "summary_large_image" },
+    //   ...
+    // ]
+    ```
+
+    Convert the output to whatever format your framework's head management expects. Each element is one of:
+    - `{ title: string }` — for the `<title>` tag
+    - `{ property: string; content: string }` — for `<meta property="…">` tags
+    - `{ name: string; content: string }` — for `<meta name="…">` tags
+  </TabItem>
+</Tabs>
+
+## Canonical URLs
+
+The `og:url` tag is set to the article's canonical URL. `buildCanonicalUrl` from `@scribe-atp/core` derives this from `article.canonicalUrl` (if set by the author in Scribe CMS), or by combining the publication URL, `site.urlPrefix`, and `article.path`.
+
+If your site uses a custom domain and the author's canonical URL doesn't match, set `article.canonicalUrl` in Scribe CMS to the correct URL.
+
+## Site index and group pages
+
+Use the site variants for pages that list articles rather than displaying one:
+
+<Tabs>
+  <TabItem label="React Router v7">
+    ```ts
+    import { siteMeta } from '@scribe-atp/react-router-framework';
+
+    export function meta({ loaderData }: Route.MetaArgs) {
+      if (!loaderData) return [{ title: 'My Blog' }];
+      return [
+        ...siteMeta(loaderData.site),
+        { title: 'My Blog' },
+      ];
+    }
+    ```
+  </TabItem>
+  <TabItem label="Nuxt 3">
+    ```ts
+    import { siteSeoMeta } from '@scribe-atp/nuxt';
+
+    useSeoMeta(siteSeoMeta(site));
+    ```
+  </TabItem>
+  <TabItem label="Core">
+    ```ts
+    import { generateSiteMeta } from '@scribe-atp/core';
+
+    const tags = generateSiteMeta(site);
+    ```
+  </TabItem>
+</Tabs>
