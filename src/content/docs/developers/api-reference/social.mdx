@@ -1,0 +1,127 @@
+---
+title: "@scribe-atp/social"
+description: API reference for @scribe-atp/social — React Like and Subscribe buttons backed by AT Protocol OAuth.
+---
+
+## Components
+
+### `LikeButton`
+
+```tsx
+function LikeButton(props: LikeButtonProps): JSX.Element
+```
+
+A React button that creates an AT Protocol `app.bsky.feed.like` record ("recommend") for an article when clicked. Opens a popup OAuth flow at `social.scribe-atp.app`, then updates to a confirmed state on success.
+
+**`LikeButtonProps`**
+
+| Prop | Type | Required | Description |
+| ---- | ---- | -------- | ----------- |
+| `documentUri` | `string` | ✓ | AT URI of the `site.standard.document` record |
+| `title` | `string` | ✓ | Article title — shown in the like popup |
+| `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
+
+```tsx
+import { LikeButton } from '@scribe-atp/social';
+
+<LikeButton
+  documentUri="at://did:plc:abc123/site.standard.document/3jxtctq7kqm2y"
+  title="My Article Title"
+/>
+```
+
+**Getting the `documentUri`:** Use `fetchArticleBySlug` from `@scribe-atp/core` — it returns `{ article, uri }` where `uri` is the document AT URI. If you're using `@scribe-atp/react-router-framework`, `createArticleRouteLoader` includes `documentUri` in the loader return.
+
+**Liked state persistence:** Once liked, the result is stored in `localStorage` under the key `scribe:recommended:{documentUri}`. The button will render in its confirmed state on future visits without another network call.
+
+---
+
+### `SubscribeButton`
+
+```tsx
+function SubscribeButton(props: SubscribeButtonProps): JSX.Element
+```
+
+A React button that follows an author's publication on the AT Protocol when clicked. Opens a popup OAuth flow, then updates to a confirmed state on success.
+
+**`SubscribeButtonProps`**
+
+| Prop | Type | Required | Description |
+| ---- | ---- | -------- | ----------- |
+| `publicationUri` | `string` | ✓ | AT URI of the `site.standard.publication` record |
+| `title` | `string` | ✓ | Publication name — shown in the subscribe popup |
+| `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
+
+```tsx
+import { SubscribeButton } from '@scribe-atp/social';
+
+<SubscribeButton
+  publicationUri="at://did:plc:abc123/site.standard.publication/3mp4nd46xwr2h"
+  title="My Site"
+/>
+```
+
+**Getting the `publicationUri`:** `fetchSite` from `@scribe-atp/core` returns a `Site` object whose `uri` field is the publication AT URI. `createArticleRouteLoader` also returns `publicationUri` in the loader data.
+
+**Subscribed state persistence:** Stored in `localStorage` under `scribe:subscribed:{publicationUri}`.
+
+---
+
+## Storage utilities
+
+Exported for reading or setting liked/subscribed state outside the components — e.g. for pre-checking state server-side or in tests.
+
+### `isRecommended`
+
+```ts
+function isRecommended(documentUri: string): boolean
+```
+
+Returns `true` if the current user has already liked the given document.
+
+---
+
+### `markRecommended`
+
+```ts
+function markRecommended(documentUri: string): void
+```
+
+Persists a liked state to `localStorage`. Useful if you've handled the OAuth flow yourself and want the button to reflect it.
+
+---
+
+### `isSubscribed`
+
+```ts
+function isSubscribed(publicationUri: string): boolean
+```
+
+Returns `true` if the current user has already subscribed to the given publication.
+
+---
+
+### `markSubscribed`
+
+```ts
+function markSubscribed(publicationUri: string): void
+```
+
+Persists a subscribed state to `localStorage`.
+
+---
+
+All four storage functions are SSR-safe — `localStorage` access is wrapped in a try/catch. They return `false` / do nothing when called in environments where `localStorage` is unavailable.
+
+---
+
+## How the popup flow works
+
+1. The user clicks Like or Subscribe. A `480×640` popup window opens at `social.scribe-atp.app` with the relevant AT URI, a `title`, and a one-time `token` as query params.
+2. The user authenticates with their Bluesky account via AT Protocol OAuth.
+3. On success, the service writes the like or follow record and notifies the opener page. Notification uses `postMessage` if `window.opener` is available, or the button polls `/status/:token` as a fallback (handles browsers that block cross-origin `postMessage` after popup close).
+4. The button transitions to its confirmed state (`Liked ✓` / `Subscribed ✓`) and the result is persisted to `localStorage`.
+
+The polling fallback runs for up to 30 seconds (20 attempts at 1.5 s intervals) before stopping.
+
+See the [Social interactions guide](/developers/guides/social) for full integration examples.

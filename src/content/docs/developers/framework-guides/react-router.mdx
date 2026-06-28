@@ -53,34 +53,61 @@ export default function Blog() {
 
 ## Dynamic article route
 
-For routes where the slug comes from URL params, use `fetchArticle` from `@scribe-atp/core` directly inside your loader:
+Use `createArticleRouteLoader` for routes where the slug comes from URL params. It fetches the article and its AT URI and returns `ArticleWithUri` — `{ ...article, documentUri }`.
 
 ```tsx
-// app/routes/blog.$group.$slug.tsx
-import type { LoaderFunctionArgs } from 'react-router';
-import { fetchArticle } from '@scribe-atp/core';
+// app/routes/blog.$group.$articleSlug.tsx
+import { createArticleRouteLoader } from '@scribe-atp/react-router-framework';
 import { useLoaderData } from 'react-router';
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
-  return fetchArticle('alice.bsky.social', params.slug!, request.signal);
-}
+export const loader = createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social');
 
 export default function Article() {
-  const article = useLoaderData<typeof loader>();
+  const { title, content, documentUri } = useLoaderData<typeof loader>();
 
   return (
     <article>
-      <h1>{article.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: article.content }} />
+      <h1>{title}</h1>
+      <div dangerouslySetInnerHTML={{ __html: content }} />
     </article>
   );
 }
 ```
 
+Pass `documentUri` to `@scribe-atp/social`'s `LikeButton` if you want social interactions on the article page.
+
+## Open Graph meta tags
+
+Use `articleMeta` to populate Open Graph and Twitter Card tags for rich link previews. Your loader must also fetch the `site` object:
+
+```tsx
+import { createArticleRouteLoader, articleMeta } from '@scribe-atp/react-router-framework';
+import { fetchSite } from '@scribe-atp/core';
+import type { Route } from './+types/Article';
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const [articleData, site] = await Promise.all([
+    createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social')({ request, params }),
+    fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal),
+  ]);
+  return { ...articleData, publicationUri: site.uri, site };
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  if (!loaderData) return [{ title: 'My Blog' }];
+  return [
+    ...articleMeta(loaderData, loaderData.site),
+    { title: `${loaderData.title} | My Blog` },
+  ];
+}
+```
+
+See the [Open Graph meta tags guide](/developers/guides/meta-tags) for more detail.
+
 ## TypeScript types
 
-All types from `@scribe-atp/core` are re-exported from `@scribe-atp/react-router-framework`:
+All types from `@scribe-atp/core` are re-exported from `@scribe-atp/react-router-framework`, plus `ArticleWithUri`:
 
 ```ts
-import type { Site, Article, ArticleRef, SiteGroup } from '@scribe-atp/react-router-framework';
+import type { Site, Article, ArticleRef, SiteGroup, ArticleWithUri } from '@scribe-atp/react-router-framework';
 ```

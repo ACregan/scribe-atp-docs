@@ -25,6 +25,32 @@ Fetches a site record from the author's PDS. Resolves the author handle to a DID
 
 ---
 
+### `fetchArticleBySlug`
+
+```ts
+function fetchArticleBySlug(
+  author: string,
+  publicationUrl: string,
+  articleSlug: string,
+  signal?: AbortSignal
+): Promise<ArticleResult>
+```
+
+Fetches a full article record and its AT URI in a single call. Resolves the site record first (using the publication URL cache if already fetched), then locates the article ref by slug and fetches the full article.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
+| `articleSlug` | `string` | The article's rkey / slug |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+Returns `{ article: Article, uri: string }`. The `uri` is the full AT URI of the `site.standard.document` record — pass it to `@scribe-atp/social`'s `LikeButton` component.
+
+This is the preferred function for article pages in server-rendered frameworks. Use `fetchArticle` only when you don't need the AT URI.
+
+---
+
 ### `fetchArticle`
 
 ```ts
@@ -35,13 +61,35 @@ function fetchArticle(
 ): Promise<Article>
 ```
 
-Fetches a single article record (including full HTML content) from the author's PDS.
+Fetches a single article record (including full HTML content) directly by slug. Does not return the AT URI.
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
 | `articleSlug` | `string` | The article's rkey / slug |
 | `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+---
+
+### `resolvePublicationUri`
+
+```ts
+function resolvePublicationUri(
+  author: string,
+  publicationUrl: string,
+  signal?: AbortSignal
+): Promise<string>
+```
+
+Resolves the AT URI of a site record given the author handle and publication URL. Results are cached for the lifetime of the module — repeated calls with the same arguments make no additional network requests.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+Returns a string AT URI, e.g. `"at://did:plc:.../site.standard.publication/3mp4nd46xwr2h"`. Pass this to `@scribe-atp/social`'s `SubscribeButton` component.
 
 ---
 
@@ -183,6 +231,54 @@ See the [Sitemaps guide](/developers/guides/sitemaps) for usage examples.
 
 ---
 
+### `generateArticleMeta`
+
+```ts
+function generateArticleMeta(article: Article, site: Site): ScribeMetaTag[]
+```
+
+Returns a framework-neutral array of meta tag descriptors for an article page. Covers `og:type`, `og:title`, `og:url`, `og:site_name`, `og:description`, `og:image`, `twitter:card`, `twitter:title`, `twitter:description`, and `twitter:image`.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `article` | `Article` | The full article object, as returned by `fetchArticleBySlug` or `fetchArticle` |
+| `site` | `Site` | The site object, used for `og:site_name` and canonical URL derivation |
+
+Pass the output to a framework adapter (`articleMeta` in `@scribe-atp/react-router-framework`, `articleMetadata` in `@scribe-atp/next`, `articleSeoMeta` in `@scribe-atp/nuxt`) or convert to your framework's format manually.
+
+See the [Open Graph meta tags guide](/developers/guides/meta-tags) for framework-specific usage.
+
+---
+
+### `generateSiteMeta`
+
+```ts
+function generateSiteMeta(site: Site): ScribeMetaTag[]
+```
+
+Returns meta tag descriptors for a site index or group page — covers title, `og:type` (`website`), and optionally description and splash image.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
+
+---
+
+### `buildCanonicalUrl`
+
+```ts
+function buildCanonicalUrl(article: Article, site: Site): string
+```
+
+Derives the fully-qualified canonical URL for an article. Uses `article.canonicalUrl` if set; otherwise combines `article.site` (the publication URL), `site.urlPrefix`, and `article.path`.
+
+```ts
+buildCanonicalUrl(article, site);
+// → "https://alice.bsky.social/blog/my-first-post"
+```
+
+---
+
 ## Types
 
 ### `Site`
@@ -272,3 +368,27 @@ interface SiteRecord extends Site {
 ```
 
 Use `slugFromUri(record.uri)` to extract the rkey when constructing URLs.
+
+### `ArticleResult`
+
+Returned by `fetchArticleBySlug`. Contains the full article and its AT URI.
+
+```ts
+interface ArticleResult {
+  article: Article;
+  uri: string;  // AT URI, e.g. "at://did:plc:…/site.standard.document/3abc123"
+}
+```
+
+### `ScribeMetaTag`
+
+The output element type of `generateArticleMeta` and `generateSiteMeta`. A union of three tag shapes:
+
+```ts
+type ScribeMetaTag =
+  | { title: string }
+  | { name: string; content: string }
+  | { property: string; content: string };
+```
+
+Framework adapters convert this to their own meta format. Consume it directly only if you're writing your own adapter or using a framework not covered by the existing packages.

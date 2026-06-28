@@ -62,6 +62,54 @@ Returns `{ data, pending, error, refresh }`. `data` holds `Article | null`.
 
 ---
 
+## Meta helpers
+
+### `articleSeoMeta`
+
+```ts
+function articleSeoMeta(article: Article, site: Site): UseSeoMetaInput
+```
+
+Returns a camelCase object shaped for Nuxt's `useSeoMeta()` composable. Covers `title`, `ogType`, `ogTitle`, `ogUrl`, `ogSiteName`, `ogDescription`, `ogImage`, `twitterCard`, `twitterTitle`, `twitterDescription`, and `twitterImage`.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `article` | `Article` | The full article object |
+| `site` | `Site` | The site object |
+
+```vue
+<script setup lang="ts">
+import { articleSeoMeta } from '@scribe-atp/nuxt';
+import { fetchArticleBySlug, fetchSite } from '@scribe-atp/core';
+
+const route = useRoute();
+const [{ article }, site] = await Promise.all([
+  fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', route.params.slug as string),
+  fetchSite('alice.bsky.social', 'https://alice.bsky.social'),
+]);
+
+useSeoMeta(articleSeoMeta(article, site));
+</script>
+```
+
+This function is **not** auto-imported — use an explicit import from `@scribe-atp/nuxt`.
+
+---
+
+### `siteSeoMeta`
+
+```ts
+function siteSeoMeta(site: Site): UseSeoMetaInput
+```
+
+Returns `useSeoMeta()` input for a site index or group page.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
+
+---
+
 ## Types
 
 All types from `@scribe-atp/core` are re-exported:
