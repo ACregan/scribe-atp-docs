@@ -1,6 +1,34 @@
 ---
 title: "@scribe-atp/react"
-description: API reference for @scribe-atp/react — useSite and useArticle hooks.
+description: API reference for @scribe-atp/react — useSite, useArticle hooks and ScribeContent component.
+---
+
+## Components
+
+### `ScribeContent`
+
+```tsx
+function ScribeContent(props: ScribeContentProps): JSX.Element
+
+type ScribeContentProps = Omit<HTMLAttributes<HTMLDivElement>, "dangerouslySetInnerHTML"> & {
+  html: string;
+};
+```
+
+A thin `<div>` wrapper that renders serialised article HTML. Adds the `scribe-content` class automatically so styles from `@scribe-atp/styles` are applied. Accepts all standard `div` HTML attributes — `className` is merged with `scribe-content`, not replaced.
+
+```tsx
+import { ScribeContent } from "@scribe-atp/react";
+import "@scribe-atp/styles";
+
+<ScribeContent html={article.content} />
+
+// With an extra class
+<ScribeContent html={article.content} className={styles.articleBody} />
+```
+
+See the [`@scribe-atp/styles` reference](/developers/api-reference/styles) for theming and the full list of styled elements.
+
 ---
 
 ## Hooks

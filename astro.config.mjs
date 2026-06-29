@@ -119,6 +119,10 @@ export default defineConfig({
                   label: "@scribe-atp/social",
                   slug: "developers/api-reference/social",
                 },
+                {
+                  label: "@scribe-atp/styles",
+                  slug: "developers/api-reference/styles",
+                },
               ],
             },
           ],
