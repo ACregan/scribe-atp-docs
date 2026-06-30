@@ -1,6 +1,6 @@
 ---
 title: "@scribe-atp/social"
-description: API reference for @scribe-atp/social — React Like and Subscribe buttons backed by AT Protocol OAuth.
+description: API reference for @scribe-atp/social — React Like, Share, and Subscribe buttons backed by AT Protocol OAuth.
 ---
 
 ## Components
@@ -18,21 +18,64 @@ A React button that creates an AT Protocol `app.bsky.feed.like` record ("recomme
 | Prop | Type | Required | Description |
 | ---- | ---- | -------- | ----------- |
 | `documentUri` | `string` | ✓ | AT URI of the `site.standard.document` record |
+| `publicationUri` | `string` | ✓ | AT URI of the `site.standard.publication` record |
 | `title` | `string` | ✓ | Article title — shown in the like popup |
 | `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
+| `className` | `string` | — | Additional CSS class appended to the base `scribe-atp-like-button` class |
+| `children` | `ReactNode \| ((isLiked: boolean) => ReactNode)` | — | Custom button label. Omit to use the defaults `"Like"` / `"Liked ✓"` |
+| `onSuccess` | `() => void` | — | Called after a successful like |
+| `defaultLiked` | `boolean` | — | Initial liked state. Pass `true` from an SSR loader to avoid a flash of unconfirmed state on first render |
 
 ```tsx
 import { LikeButton } from '@scribe-atp/social';
 
 <LikeButton
   documentUri="at://did:plc:abc123/site.standard.document/3jxtctq7kqm2y"
+  publicationUri="at://did:plc:abc123/site.standard.publication/3mp4nd46xwr2h"
   title="My Article Title"
 />
 ```
 
-**Getting the `documentUri`:** Use `fetchArticleBySlug` from `@scribe-atp/core` — it returns `{ article, uri }` where `uri` is the document AT URI. If you're using `@scribe-atp/react-router-framework`, `createArticleRouteLoader` includes `documentUri` in the loader return.
+**Getting the URIs:** Use `fetchArticleBySlug` from `@scribe-atp/core` — it returns `{ article, uri }` where `uri` is the document AT URI. `fetchSite` returns a `Site` object whose `uri` is the publication AT URI. If you're using `@scribe-atp/react-router-framework`, `createArticleRouteLoader` includes `documentUri` in the loader return.
 
-**Liked state persistence:** Once liked, the result is stored in `localStorage` under the key `scribe:recommended:{documentUri}`. The button will render in its confirmed state on future visits without another network call.
+**Liked state persistence:** Once liked, the result is stored in `localStorage` under the key `scribe:recommended:{documentUri}`. The button renders in its confirmed state on future visits without another network call.
+
+**Accessibility:** Uses `aria-pressed` to communicate liked state. The button remains in the tab order after being activated — it is never `disabled`.
+
+---
+
+### `ShareButton`
+
+```tsx
+function ShareButton(props: ShareButtonProps): JSX.Element
+```
+
+A React button that opens a popup for the reader to share the article via their Bluesky account. After a successful share, the button briefly enters a confirmed state then resets, allowing the reader to share again.
+
+**`ShareButtonProps`**
+
+| Prop | Type | Required | Description |
+| ---- | ---- | -------- | ----------- |
+| `documentUri` | `string` | ✓ | AT URI of the `site.standard.document` record |
+| `publicationUri` | `string` | ✓ | AT URI of the `site.standard.publication` record |
+| `title` | `string` | ✓ | Article title — shown in the share popup |
+| `canonicalUrl` | `string` | — | Canonical URL of the article. Defaults to `window.location.href` |
+| `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
+| `className` | `string` | — | Additional CSS class appended to the base `scribe-atp-share-button` class |
+| `children` | `ReactNode \| ((isShared: boolean) => ReactNode)` | — | Custom button label. Omit to use the defaults `"Share"` / `"Shared ✓"` |
+| `onSuccess` | `() => void` | — | Called after a successful share |
+
+```tsx
+import { ShareButton } from '@scribe-atp/social';
+
+<ShareButton
+  documentUri="at://did:plc:abc123/site.standard.document/3jxtctq7kqm2y"
+  publicationUri="at://did:plc:abc123/site.standard.publication/3mp4nd46xwr2h"
+  title="My Article Title"
+/>
+```
+
+**Note:** Unlike `LikeButton` and `SubscribeButton`, the shared state is **not** persisted to `localStorage`. The confirmed state resets after 3 seconds so the reader can share again.
 
 ---
 
@@ -51,6 +94,10 @@ A React button that follows an author's publication on the AT Protocol when clic
 | `publicationUri` | `string` | ✓ | AT URI of the `site.standard.publication` record |
 | `title` | `string` | ✓ | Publication name — shown in the subscribe popup |
 | `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
+| `className` | `string` | — | Additional CSS class appended to the base `scribe-atp-subscribe-button` class |
+| `children` | `ReactNode \| ((isSubscribed: boolean) => ReactNode)` | — | Custom button label. Omit to use the defaults `"Subscribe"` / `"Subscribed ✓"` |
+| `onSuccess` | `() => void` | — | Called after a successful subscription |
+| `defaultSubscribed` | `boolean` | — | Initial subscribed state. Pass `true` from an SSR loader to avoid a flash of unconfirmed state on first render |
 
 ```tsx
 import { SubscribeButton } from '@scribe-atp/social';
@@ -64,6 +111,8 @@ import { SubscribeButton } from '@scribe-atp/social';
 **Getting the `publicationUri`:** `fetchSite` from `@scribe-atp/core` returns a `Site` object whose `uri` field is the publication AT URI. `createArticleRouteLoader` also returns `publicationUri` in the loader data.
 
 **Subscribed state persistence:** Stored in `localStorage` under `scribe:subscribed:{publicationUri}`.
+
+**Accessibility:** Uses `aria-pressed` to communicate subscribed state. The button remains in the tab order after being activated — it is never `disabled`.
 
 ---
 
@@ -117,10 +166,10 @@ All four storage functions are SSR-safe — `localStorage` access is wrapped in 
 
 ## How the popup flow works
 
-1. The user clicks Like or Subscribe. A `480×640` popup window opens at `social.scribe-atp.app` with the relevant AT URI, a `title`, and a one-time `token` as query params.
+1. The user clicks a button. A `480×640` popup window opens at `social.scribe-atp.app` with the relevant AT URI, a `title`, and a one-time `token` as query params.
 2. The user authenticates with their Bluesky account via AT Protocol OAuth.
-3. On success, the service writes the like or follow record and notifies the opener page. Notification uses `postMessage` if `window.opener` is available, or the button polls `/status/:token` as a fallback (handles browsers that block cross-origin `postMessage` after popup close).
-4. The button transitions to its confirmed state (`Liked ✓` / `Subscribed ✓`) and the result is persisted to `localStorage`.
+3. On success, the service writes the like, share, or follow record and notifies the opener page. Notification uses `postMessage` if `window.opener` is available, or the button polls `/status/:token` as a fallback (handles browsers that block cross-origin `postMessage` after popup close).
+4. The button transitions to its confirmed state. For `LikeButton` and `SubscribeButton` the state is persisted to `localStorage`; for `ShareButton` the confirmed state resets after 3 seconds.
 
 The polling fallback runs for up to 30 seconds (20 attempts at 1.5 s intervals) before stopping.
 
