@@ -7,6 +7,16 @@ export default defineConfig({
   site: "https://docs.scribe-atp.app",
   integrations: [
     starlight({
+      head: [
+        {
+          tag: "script",
+          attrs: {
+            defer: true,
+            src: "https://analytics.perpetualsummer.ltd/script.js",
+            "data-website-id": "65e60abd-f944-4ca3-87f6-c0555bc3e917",
+          },
+        },
+      ],
       title: "Scribe ATP",
       logo: {
         dark: "./src/assets/ScribeATP-LOGO_white.svg",
