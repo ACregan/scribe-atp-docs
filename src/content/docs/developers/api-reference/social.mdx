@@ -85,18 +85,19 @@ import { ShareButton } from '@scribe-atp/social';
 function SubscribeButton(props: SubscribeButtonProps): JSX.Element
 ```
 
-A React button that follows an author's publication on the AT Protocol when clicked. Opens a popup OAuth flow, then updates to a confirmed state on success.
+A React button that follows an author's publication on the AT Protocol when clicked. Opens a popup OAuth flow, then updates to a confirmed state on success. **When the reader is already subscribed, clicking the button opens an unsubscribe confirmation popup** — the button acts as a toggle.
 
 **`SubscribeButtonProps`**
 
 | Prop | Type | Required | Description |
 | ---- | ---- | -------- | ----------- |
 | `publicationUri` | `string` | ✓ | AT URI of the `site.standard.publication` record |
-| `title` | `string` | ✓ | Publication name — shown in the subscribe popup |
+| `title` | `string` | ✓ | Publication name — shown in the subscribe/unsubscribe popup |
 | `serviceUrl` | `string` | — | Override the social service base URL. Defaults to `"https://social.scribe-atp.app"` |
 | `className` | `string` | — | Additional CSS class appended to the base `scribe-atp-subscribe-button` class |
-| `children` | `ReactNode \| ((isSubscribed: boolean) => ReactNode)` | — | Custom button label. Omit to use the defaults `"Subscribe"` / `"Subscribed ✓"` |
+| `children` | `ReactNode \| ((isSubscribed: boolean) => ReactNode)` | — | Custom button label. Omit to use the defaults `"Subscribe"` / `"Subscribed ✓"`. The render prop receives `isSubscribed` so you can show different copy in each state |
 | `onSuccess` | `() => void` | — | Called after a successful subscription |
+| `onUnsubscribe` | `() => void` | — | Called after a confirmed unsubscription |
 | `defaultSubscribed` | `boolean` | — | Initial subscribed state. Pass `true` from an SSR loader to avoid a flash of unconfirmed state on first render |
 
 ```tsx
@@ -110,7 +111,7 @@ import { SubscribeButton } from '@scribe-atp/social';
 
 **Getting the `publicationUri`:** `fetchSite` from `@scribe-atp/core` returns a `Site` object whose `uri` field is the publication AT URI. `createArticleRouteLoader` also returns `publicationUri` in the loader data.
 
-**Subscribed state persistence:** Stored in `localStorage` under `scribe:subscribed:{publicationUri}`.
+**Subscribed state persistence:** Stored in `localStorage` under `scribe:subscribed:{publicationUri}`. Cleared automatically after a confirmed unsubscription.
 
 **Accessibility:** Uses `aria-pressed` to communicate subscribed state. The button remains in the tab order after being activated — it is never `disabled`.
 
@@ -160,7 +161,17 @@ Persists a subscribed state to `localStorage`.
 
 ---
 
-All four storage functions are SSR-safe — `localStorage` access is wrapped in a try/catch. They return `false` / do nothing when called in environments where `localStorage` is unavailable.
+### `clearSubscribed`
+
+```ts
+function clearSubscribed(publicationUri: string): void
+```
+
+Removes the subscribed state from `localStorage` for the given publication. Called automatically after a confirmed unsubscription via `SubscribeButton`.
+
+---
+
+All five storage functions are SSR-safe — `localStorage` access is wrapped in a try/catch. They return `false` / do nothing when called in environments where `localStorage` is unavailable.
 
 ---
 
