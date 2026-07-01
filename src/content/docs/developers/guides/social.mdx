@@ -239,6 +239,17 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   The components write liked/subscribed state to `localStorage` under `scribe:recommended:{documentUri}` and `scribe:subscribed:{publicationUri}`. Mirror these to a cookie (e.g. in `onSuccess`) so your SSR loader can read them on the next request.
 </Aside>
 
+## Unsubscribing
+
+`SubscribeButton` is a **toggle**. When the reader is already subscribed, clicking the button opens an unsubscribe confirmation popup rather than the subscribe flow. The popup asks "Are you sure you want to unsubscribe from **Site**?" and requires the reader to confirm before deleting their subscription record.
+
+After a confirmed unsubscribe:
+- The subscription AT Protocol record is deleted from the reader's repository.
+- `localStorage` is cleared for the publication.
+- The button returns to its unsubscribed state.
+
+No extra props are required. The button detects subscribed state via `localStorage` and routes the click to the appropriate popup automatically.
+
 ## Liked / subscribed state
 
 State is persisted in `localStorage` under:
@@ -250,11 +261,14 @@ The components read this on mount, so a returning reader will see the confirmed 
 The storage utilities are also exported directly if you need to read or set state programmatically:
 
 ```ts
-import { isRecommended, isSubscribed } from '@scribe-atp/social';
+import { isRecommended, isSubscribed, clearSubscribed } from '@scribe-atp/social';
 
 if (isRecommended(documentUri)) {
   // already liked
 }
+
+// Remove a subscription from localStorage (e.g. after a server-side unsubscribe)
+clearSubscribed(publicationUri);
 ```
 
 See the [API reference](/developers/api-reference/social) for the full function signatures.
