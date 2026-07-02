@@ -89,6 +89,10 @@ export default defineConfig({
                   slug: "developers/guides/social",
                 },
                 {
+                  label: "Engagement data",
+                  slug: "developers/guides/engagement-data",
+                },
+                {
                   label: "Request cancellation",
                   slug: "developers/guides/cancellation",
                 },
