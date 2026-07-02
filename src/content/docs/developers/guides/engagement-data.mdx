@@ -1,0 +1,179 @@
+---
+title: Engagement data
+description: Fetch like, share, and subscriber counts from the Scribe social service to display live engagement metrics on your site.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The Scribe social service exposes a `GET /counts` endpoint that returns aggregate engagement counts — likes, shares, and subscribes — for any publication or article. Use it to display live metrics alongside your content.
+
+<Aside>
+  This endpoint is separate from the `@scribe-atp/social` React components. The components handle the OAuth interaction; `GET /counts` is for reading aggregate totals, with no authentication required.
+</Aside>
+
+## Endpoint
+
+```
+GET https://social.scribe-atp.app/counts
+```
+
+The endpoint is publicly accessible from allowed origins (see [CORS](#cors-and-allowed-origins) below). No API key or token is required.
+
+## Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `action_type` | yes | `recommend`, `subscribe`, or `share` |
+| `publication_uri` | no | Filter to a specific site — AT URI of the `site.standard.publication` record |
+| `document_uri` | no | Filter to a specific article — AT URI of the `site.standard.document` record |
+| `from` | no | Start of window — ISO 8601 or relative (`-7d`, `-14d`, `-30d`) |
+| `to` | no | End of window — ISO 8601 or relative; defaults to now |
+| `group_by` | no | `document_uri`, `did`, or `day` |
+| `order_by` | no | `count` (default) or `date`; only applies with `group_by` |
+| `limit` | no | 1–100, default 10; only applies with `group_by` |
+
+<Aside type="caution">
+  AT Protocol uses `recommend` — not `like` — as the `action_type` for likes. This matches the underlying `site.standard.graph.recommend` collection name. Passing `like` will return a 400 error.
+</Aside>
+
+## Basic usage
+
+Fetch the total number of likes for an article:
+
+```ts
+const res = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=recommend&document_uri=${encodeURIComponent(documentUri)}`
+);
+const { count } = await res.json();
+// count: 42
+```
+
+Fetch the current subscriber count for a site:
+
+```ts
+const res = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=subscribe&publication_uri=${encodeURIComponent(publicationUri)}`
+);
+const { count } = await res.json();
+// count: 17
+```
+
+## Time windows
+
+Pass `from` to scope the count to a recent period. Relative shorthand is accepted:
+
+| Value | Meaning |
+|-------|---------|
+| `-7d` | Past 7 days |
+| `-14d` | Past 14 days |
+| `-30d` | Past 30 days |
+| ISO 8601 | e.g. `2026-06-01T00:00:00Z` |
+
+Combine `from` and `to` to query a specific window — useful for week-on-week comparisons:
+
+```ts
+// This week
+const thisWeek = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=subscribe&publication_uri=${encodeURIComponent(publicationUri)}&from=-7d`
+).then((r) => r.json());
+
+// The week before
+const lastWeek = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=subscribe&publication_uri=${encodeURIComponent(publicationUri)}&from=-14d&to=-7d`
+).then((r) => r.json());
+
+const delta = thisWeek.count - lastWeek.count;
+```
+
+<Aside>
+  Date ranges are capped at 90 days. Requests spanning a longer period will return a 400 error.
+</Aside>
+
+## Grouped results
+
+Add `group_by` to break the count down by article, reader, or day. The response shape changes to include a `groups` array:
+
+```json
+{
+  "groups": [
+    { "key": "at://did:plc:.../site.standard.document/3mp...", "count": 17 },
+    { "key": "at://did:plc:.../site.standard.document/3mq...", "count":  9 }
+  ],
+  "total": 42
+}
+```
+
+**Most shared articles in the past 30 days:**
+
+```ts
+const res = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=share&from=-30d&group_by=document_uri&order_by=count&limit=10`
+);
+const { groups, total } = await res.json();
+```
+
+**Daily like counts over the past week (for a sparkline):**
+
+```ts
+const res = await fetch(
+  `https://social.scribe-atp.app/counts?action_type=recommend&publication_uri=${encodeURIComponent(publicationUri)}&from=-7d&group_by=day&order_by=date`
+);
+const { groups } = await res.json();
+// groups: [{ key: "2026-06-26", count: 3 }, { key: "2026-06-27", count: 1 }, ...]
+```
+
+## Fetching counts in your loader
+
+For SSR frameworks, fetch counts in your route loader alongside the article to avoid client-side waterfalls:
+
+```ts
+// app/routes/blog.$slug.tsx — React Router v7
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const [article, likeCount] = await Promise.all([
+    fetchArticle('alice.bsky.social', 'https://alice.bsky.social', params.slug, request.signal),
+    fetch(
+      `https://social.scribe-atp.app/counts?action_type=recommend&document_uri=${encodeURIComponent(article.uri)}`
+    ).then((r) => r.json()).then((d) => d.count as number).catch(() => null),
+  ]);
+  return { article, likeCount };
+}
+```
+
+The `.catch(() => null)` ensures a social service outage does not break your article route.
+
+## CORS and allowed origins
+
+`GET /counts` includes CORS headers that allow browser requests from these origins:
+
+- `https://norobots.blog`
+- `https://anthonycregan.co.uk`
+- `https://www.anthonycregan.co.uk`
+- `https://perpetualsummer.ltd`
+- `https://www.perpetualsummer.ltd`
+- `https://scribe-cms.app`
+
+Requests from other origins will be blocked by the browser's CORS policy. Server-side `fetch` calls (in a loader or API route) are not subject to CORS and will work from any origin.
+
+<Aside type="tip">
+  If you are building a site on the Scribe platform and need your origin added to the allowlist, contact the Scribe team.
+</Aside>
+
+## Rate limits
+
+The endpoint is rate limited to **60 requests per minute per IP address**. Requests exceeding this limit receive a `429 Too Many Requests` response. For most sites, fetching counts in a server-side loader on each page view is well within this limit.
+
+## Getting the AT URIs
+
+The AT URIs you need to pass as `publication_uri` or `document_uri` come from your site and article data:
+
+```ts
+import { fetchSite, fetchArticle } from '@scribe-atp/core';
+
+const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
+// site.uri → publication_uri
+
+const { article, uri: documentUri } = await fetchArticle('alice.bsky.social', 'https://alice.bsky.social', slug);
+// documentUri → document_uri
+```
+
+See [Core Concepts](/developers/core-concepts) for more on AT URIs.
