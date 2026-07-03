@@ -270,7 +270,7 @@ Returns meta tag descriptors for a site index or group page — covers title, `o
 function buildCanonicalUrl(article: Article, site: Site): string
 ```
 
-Derives the fully-qualified canonical URL for an article. Uses `article.canonicalUrl` if set; otherwise combines `article.site` (the publication URL), `site.urlPrefix`, and `article.path`.
+Derives the fully-qualified canonical URL for an article. Uses `article.canonicalUrl` if set; otherwise combines `article.site` (the site's HTTPS URL), `site.urlPrefix`, and `article.path`.
 
 ```ts
 buildCanonicalUrl(article, site);
@@ -331,17 +331,19 @@ The full article record, including HTML content. Returned by `fetchArticle`.
 ```ts
 interface Article {
   title: string;
-  content: string;        // Sanitised HTML — safe to render directly
-  path: string;           // e.g. "/blog/2024/my-first-post"
-  site: string;           // AT URI of the site.standard.publication record
-  canonicalUrl?: string;  // Fully-qualified URL, e.g. "https://myblog.com/blog/creative-writing/my-article"
+  content: string;         // Sanitised HTML — safe to render directly
+  textContent?: string;    // Plain-text version of content (HTML tags stripped)
+  path: string;            // e.g. "/blog/2024/my-first-post"
+  site: string;            // HTTPS URL of the canonical site, e.g. "https://myblog.com"
+  canonicalUrl?: string;   // Fully-qualified article URL, e.g. "https://myblog.com/blog/my-article"
   splashImageUrl?: string;
   description?: string;
   tags?: string[];
   contributors?: ArticleContributor[];
-  createdAt: string;      // ISO 8601
-  publishedAt: string;    // ISO 8601
-  updatedAt: string;      // ISO 8601
+  bskyPostRef?: { uri: string; cid: string };  // Bluesky post reference if the article was cross-posted
+  createdAt?: string;      // ISO 8601
+  publishedAt: string;     // ISO 8601
+  updatedAt: string;       // ISO 8601
 }
 ```
 
