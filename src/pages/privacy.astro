@@ -1,0 +1,104 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'Privacy Policy',
+    description: 'How Scribe ATP collects, uses, and protects your personal data.',
+  }}
+>
+  <p><strong>Last updated: 3 July 2026</strong></p>
+
+  <h2>Who we are</h2>
+  <p>
+    Scribe ATP is operated by Anthony Cregan ("we", "us", "our"). If you have any questions about this policy or wish to exercise your rights, contact us at <a href="mailto:tdcregan@gmail.com">tdcregan@gmail.com</a>.
+  </p>
+
+  <h2>What services this policy covers</h2>
+  <p>This policy applies to:</p>
+  <ul>
+    <li><strong>Scribe CMS</strong> (<a href="https://scribe-cms.app">scribe-cms.app</a>) — the authoring tool for publishing content to the AT Protocol</li>
+    <li><strong>Social interactions</strong> (<a href="https://social.scribe-atp.app">social.scribe-atp.app</a>) — the service that handles likes, subscribes, and shares via Bluesky OAuth</li>
+    <li><strong>This documentation site</strong> (<a href="https://docs.scribe-atp.app">docs.scribe-atp.app</a>) and the project landing page (<a href="https://scribe-atp.app">scribe-atp.app</a>)</li>
+  </ul>
+
+  <h2>Data we collect and why</h2>
+
+  <h3>Scribe CMS</h3>
+  <p>When you sign in to Scribe CMS using Bluesky OAuth, we store:</p>
+  <ul>
+    <li><strong>Your Decentralised Identifier (DID) and Bluesky handle</strong> — to identify your account and your AT Protocol data</li>
+    <li><strong>OAuth session tokens</strong> — stored in an encrypted SQLite database on our server so you can stay signed in without re-authenticating on every visit</li>
+  </ul>
+  <p><strong>Lawful basis:</strong> performance of a contract — these fields are strictly necessary to provide the service you have signed up for.</p>
+
+  <h3>Social interactions (likes, subscribes, shares)</h3>
+  <p>When you use a Like, Subscribe, or Share button on a Scribe-powered site, we store:</p>
+  <ul>
+    <li><strong>Your DID</strong> — the AT Protocol identifier associated with your Bluesky account</li>
+    <li><strong>The action you took</strong> (like, subscribe, share) and the content it relates to</li>
+    <li><strong>A timestamp</strong> of when the action occurred</li>
+    <li><strong>OAuth session tokens</strong> — short-lived, to complete the action and maintain your session</li>
+  </ul>
+  <p><strong>Lawful basis:</strong> legitimate interests — we process this data to provide social engagement features (like counts, subscriber notifications) that are core to the service.</p>
+
+  <h3>Server logs</h3>
+  <p>Our web server (nginx) automatically logs:</p>
+  <ul>
+    <li>IP addresses</li>
+    <li>User-agent strings (browser/device information)</li>
+    <li>Requested URLs and HTTP status codes</li>
+    <li>Timestamps</li>
+  </ul>
+  <p>These logs are used solely for security monitoring and troubleshooting. <strong>Lawful basis:</strong> legitimate interests.</p>
+
+  <h2>Cookies and local storage</h2>
+
+  <h3>Cookies set by Scribe CMS</h3>
+  <ul>
+    <li><strong><code>__session</code></strong> — a strictly necessary, HTTP-only, signed session cookie. Set when you sign in. Contains your DID and handle. Expires when you sign out or the session is pruned (see Retention below). Without this cookie, the service cannot function.</li>
+    <li><strong><code>theme</code></strong> — a functional preference cookie that remembers your light/dark mode choice for one year. Contains only the string <code>"light"</code> or <code>"dark"</code>.</li>
+  </ul>
+
+  <h3>Local storage used by the social service</h3>
+  <p>After you complete a social action (like, subscribe, share), the result is synchronised to the browser tab that triggered it via <code>localStorage</code> under the key <code>scribeSession</code>. This is not a cookie and is not transmitted to our servers — it is cleared when the popup window closes.</p>
+
+  <h3>Analytics</h3>
+  <p>This documentation site uses <a href="https://umami.is">Umami Analytics</a>, a privacy-focused, cookie-free analytics tool. Umami does not use cookies, does not track individual users across sessions, and does not collect personally identifiable information.</p>
+
+  <h2>Data retention</h2>
+  <ul>
+    <li><strong>Scribe CMS OAuth sessions</strong> — pruned automatically after 90 days of inactivity</li>
+    <li><strong>Social service OAuth sessions</strong> — pruned automatically after 90 days of inactivity</li>
+    <li><strong>Social service unsubscribe records</strong> — pruned automatically after 90 days (the corresponding AT Protocol record is deleted at the time of unsubscribing; this entry is kept briefly for audit purposes)</li>
+    <li><strong>Active social engagement records</strong> (likes, subscribes, shares) — retained indefinitely; these are the data that power engagement features</li>
+    <li><strong>Server logs</strong> — rotated weekly, retained for a maximum of 30 days, then deleted</li>
+  </ul>
+
+  <h2>Third parties</h2>
+  <ul>
+    <li><strong>Bluesky / AT Protocol network</strong> — social actions (likes, subscribes) create records in your Bluesky Personal Data Server (PDS), which is governed by your PDS operator's terms. Content you publish via Scribe CMS is stored in your PDS under your own account.</li>
+    <li><strong>VPS hosting provider</strong> — our servers are hosted on a virtual private server. The provider has access to the server infrastructure but not to application-layer data.</li>
+  </ul>
+  <p>We do not sell, rent, or share your personal data with any other third parties.</p>
+
+  <h2>Your rights</h2>
+  <p>Under UK GDPR and equivalent data protection law, you have the right to:</p>
+  <ul>
+    <li><strong>Access</strong> — request a copy of the personal data we hold about you</li>
+    <li><strong>Erasure</strong> — request that we delete your personal data ("right to be forgotten")</li>
+    <li><strong>Rectification</strong> — request correction of inaccurate data</li>
+    <li><strong>Restriction</strong> — request that we limit processing in certain circumstances</li>
+    <li><strong>Portability</strong> — receive your data in a structured, machine-readable format</li>
+    <li><strong>Objection</strong> — object to processing based on legitimate interests</li>
+  </ul>
+  <p>
+    To exercise any of these rights, email <a href="mailto:tdcregan@gmail.com">tdcregan@gmail.com</a>. We will respond within 30 days. Note that social engagement data (likes, subscribes) can also be removed directly through Bluesky — unliking or unsubscribing removes the AT Protocol record from your PDS; we will then prune our local copy within 90 days per our retention schedule.
+  </p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If we make material changes to this policy, we will update the "Last updated" date at the top of this page. Continued use of the services after a change constitutes acceptance of the updated policy.
+  </p>
+</StarlightPage>
