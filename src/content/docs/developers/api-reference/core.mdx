@@ -270,7 +270,7 @@ Returns meta tag descriptors for a site index or group page — covers title, `o
 function buildCanonicalUrl(article: Article, site: Site): string
 ```
 
-Derives the fully-qualified canonical URL for an article. Uses `article.canonicalUrl` if set; otherwise combines `article.site` (the site's HTTPS URL), `site.urlPrefix`, and `article.path`.
+Derives the fully-qualified canonical URL for an article. Uses `article.canonicalUrl` if set; otherwise combines `site.url` (the site's domain, e.g. `"myblog.com"`), `site.urlPrefix`, and `article.path` to produce an `https://` URL.
 
 ```ts
 buildCanonicalUrl(article, site);
@@ -333,10 +333,10 @@ interface Article {
   title: string;
   content: string;         // Sanitised HTML — safe to render directly
   textContent?: string;    // Plain-text version of content (HTML tags stripped)
-  path: string;            // e.g. "/blog/2024/my-first-post"
-  site: string;            // HTTPS URL of the canonical site, e.g. "https://myblog.com"
+  path: string;            // e.g. "/creative-writing/my-post"
+  site: string;            // AT URI of the publication, e.g. "at://did:plc:…/site.standard.publication/3abc"
   canonicalUrl?: string;   // Fully-qualified article URL, e.g. "https://myblog.com/blog/my-article"
-  splashImageUrl?: string;
+  coverImageUrl?: string;  // URL of the cover/splash image
   description?: string;
   tags?: string[];
   contributors?: ArticleContributor[];
