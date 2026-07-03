@@ -113,10 +113,10 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 ### Article
 
 An **Article** is a single piece of written content. All articles — whether draft, unpublished, or published — are stored in the `site.standard.document` collection. An article's publication state is determined entirely by whether it appears in a Site record (see [Publication states](#publication-states) below), not by which collection it lives in. It contains:
-- `title`, `description`, `content` (full HTML), `textContent` (plain text), `path` (URL path), `splashImageUrl`
+- `title`, `description`, `content` (full HTML), `textContent` (plain text), `path` (URL path), `coverImageUrl`
 - `tags` — optional array of author-defined freeform strings for categorisation
 - `contributors` — optional array of `ArticleContributor` objects (DID, role, displayName)
-- `site` — HTTPS URL of the canonical site, e.g. `https://myblog.com`
+- `site` — AT URI of the publication record, e.g. `at://did:plc:…/site.standard.publication/3abc`
 - `canonicalUrl` — fully-qualified article URL, e.g. `https://myblog.com/blog/creative-writing/my-article`
 - `bskyPostRef` — Bluesky post AT URI and CID, present if the article was cross-posted via Scribe CMS
 - `publishedAt`, `updatedAt` timestamps
