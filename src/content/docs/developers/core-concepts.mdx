@@ -113,14 +113,19 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 ### Article
 
 An **Article** is a single piece of written content. All articles — whether draft, unpublished, or published — are stored in the `site.standard.document` collection. An article's publication state is determined entirely by whether it appears in a Site record (see [Publication states](#publication-states) below), not by which collection it lives in. It contains:
-- `title`, `description`, `content` (full HTML), `path` (full URL path), `splashImageUrl`
+- `title`, `description`, `content` (full HTML), `textContent` (plain text), `path` (URL path), `splashImageUrl`
 - `tags` — optional array of author-defined freeform strings for categorisation
 - `contributors` — optional array of `ArticleContributor` objects (DID, role, displayName)
-- `site` — AT URI of the canonical `site.standard.publication` record
-- `canonicalUrl` — fully-qualified URL, e.g. `https://myblog.com/blog/creative-writing/my-article`
-- `createdAt`, `publishedAt`, `updatedAt` timestamps
+- `site` — HTTPS URL of the canonical site, e.g. `https://myblog.com`
+- `canonicalUrl` — fully-qualified article URL, e.g. `https://myblog.com/blog/creative-writing/my-article`
+- `bskyPostRef` — Bluesky post AT URI and CID, present if the article was cross-posted via Scribe CMS
+- `publishedAt`, `updatedAt` timestamps
 
 The Site record references articles, not the other way around.
+
+<Aside type="note">
+  `site.standard.document` records follow the [site.standard lexicon](https://standard.site/docs/lexicons/document/). Any Scribe-specific data that is not part of the spec — such as the article's creation date and internal tracking fields — is stored inside a `scribe` extension object on the raw PDS record. The SDK maps all of this onto the flat `Article` type transparently; you do not need to access the `scribe` object directly.
+</Aside>
 
 ### ArticleRef
 
