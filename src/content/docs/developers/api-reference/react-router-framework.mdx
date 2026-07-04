@@ -10,7 +10,8 @@ description: API reference for @scribe-atp/react-router-framework — loader fac
 ```ts
 function createSiteLoader(
   author: string,
-  publicationUrl: string
+  publicationUrl: string,
+  deps?: { fetchSite?: typeof fetchSite }
 ): (args: LoaderFunctionArgs) => Promise<Site>
 ```
 
@@ -20,6 +21,7 @@ Returns a React Router loader function that fetches a site. The loader passes `r
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
 | `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
+| `deps.fetchSite` | `function` | Optional. Override the fetch function — useful for testing |
 
 ```ts
 // app/routes/blog.tsx
@@ -34,7 +36,8 @@ export const loader = createSiteLoader('alice.bsky.social', 'https://alice.bsky.
 function createArticleRouteLoader(
   author: string,
   publicationUrl: string,
-  slugParam?: string
+  slugParam?: string,
+  deps?: { fetchArticleBySlug?: typeof fetchArticleBySlug }
 ): (args: LoaderFunctionArgs) => Promise<ArticleWithUri>
 ```
 
@@ -45,6 +48,7 @@ Returns a React Router loader function that reads an article slug from URL param
 | `author` | `string` | Author handle or DID |
 | `publicationUrl` | `string` | The site's canonical HTTPS URL, e.g. `"https://alice.bsky.social"` |
 | `slugParam` | `string` | Optional. URL param name to read the slug from. Defaults to `"articleSlug"` |
+| `deps.fetchArticleBySlug` | `function` | Optional. Override the fetch function — useful for testing |
 
 ```ts
 // app/routes/blog.$articleSlug.tsx
@@ -63,7 +67,8 @@ The returned loader throws a `404 Response` if the slug param is missing, and an
 ```ts
 function createWellKnownLoader(
   author: string,
-  publicationUrl: string
+  publicationUrl: string,
+  deps?: { resolvePublicationUri?: typeof resolvePublicationUri }
 ): (args: LoaderFunctionArgs) => Promise<Response>
 ```
 
@@ -73,6 +78,7 @@ Returns a React Router loader function that responds with the author's publicati
 | --------- | ---- | ----------- |
 | `author` | `string` | Author handle or DID |
 | `publicationUrl` | `string` | The site's canonical HTTPS URL |
+| `deps.resolvePublicationUri` | `function` | Optional. Override the resolve function — useful for testing |
 
 ```ts
 // app/routes/well-known.ts
@@ -122,6 +128,34 @@ Returns `MetaDescriptor[]` for a site index or group page.
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | `site` | `Site` | The site object |
+
+---
+
+## Testing
+
+All three factory functions accept an optional `deps` parameter for dependency injection. Pass mock functions directly — no `vi.mock` needed.
+
+```ts
+import { describe, it, expect, vi } from 'vitest';
+import { createSiteLoader, createArticleRouteLoader, createWellKnownLoader } from '@scribe-atp/react-router-framework';
+
+describe('blog loaders', () => {
+  it('fetches the site', async () => {
+    const fetchSite = vi.fn().mockResolvedValueOnce(mockSite);
+    const loader = createSiteLoader('alice.bsky.social', 'https://alice.bsky.social', { fetchSite });
+    const result = await loader({ request: new Request('https://example.com'), params: {}, context: {} });
+    expect(result).toEqual(mockSite);
+    expect(fetchSite).toHaveBeenCalled();
+  });
+
+  it('fetches an article by slug', async () => {
+    const fetchArticleBySlug = vi.fn().mockResolvedValueOnce({ article: mockArticle, uri: mockUri });
+    const loader = createArticleRouteLoader('alice.bsky.social', 'https://alice.bsky.social', 'articleSlug', { fetchArticleBySlug });
+    const result = await loader({ request: new Request('https://example.com'), params: { articleSlug: 'hello' }, context: {} });
+    expect(result).toEqual({ ...mockArticle, documentUri: mockUri });
+  });
+});
+```
 
 ---
 
