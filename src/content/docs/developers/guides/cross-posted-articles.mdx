@@ -1,0 +1,74 @@
+---
+title: Cross-posted articles
+description: Detect articles cross-posted to Bluesky and render a "View discussion on Bluesky" link using the bskyPostRef field.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+When an author publishes an article from the Scribe CMS to Bluesky, the `Article` object returned by `@scribe-atp/core` includes a `bskyPostRef` field. You can use this field to render a link to the Bluesky post — letting readers continue the conversation there.
+
+## The `bskyPostRef` field
+
+```ts
+interface Article {
+  // ...other fields
+  bskyPostRef?: {
+    uri: string; // AT URI of the Bluesky post — e.g. at://did:plc:.../app.bsky.feed.post/3mp...
+    cid: string; // Content identifier of the post record
+  };
+}
+```
+
+`bskyPostRef` is only present on articles that the author has explicitly cross-posted to Bluesky from the CMS. Always check for its presence before using it.
+
+## Constructing the Bluesky post URL
+
+Bluesky post URLs follow a predictable pattern derived from the AT URI. An AT URI has the form:
+
+```
+at://{did}/{collection}/{rkey}
+```
+
+The web URL for the same post is:
+
+```
+https://bsky.app/profile/{did}/post/{rkey}
+```
+
+```ts
+function bskyPostUrl(atUri: string): string {
+  const parts = atUri.split('/');
+  const did = parts[2];
+  const rkey = parts[4];
+  return `https://bsky.app/profile/${did}/post/${rkey}`;
+}
+```
+
+## Rendering a "View discussion" link
+
+Check for `bskyPostRef` before rendering. If the field is absent, the article was not cross-posted and there is no Bluesky post to link to.
+
+```ts
+function bskyPostUrl(atUri: string): string {
+  const parts = atUri.split('/');
+  const did = parts[2];
+  const rkey = parts[4];
+  return `https://bsky.app/profile/${did}/post/${rkey}`;
+}
+
+// In your article component:
+{article.bskyPostRef && (
+  <a href={bskyPostUrl(article.bskyPostRef.uri)} target="_blank" rel="noopener noreferrer">
+    View discussion on Bluesky
+  </a>
+)}
+```
+
+<Aside>
+  The `cid` field in `bskyPostRef` is the content identifier for the post record. You do not need it to build the URL — it is available if you want to verify post integrity via the AT Protocol.
+</Aside>
+
+## See also
+
+- [Social interactions](/developers/guides/social) — LikeButton, ShareButton, and SubscribeButton components
+- [Core Concepts](/developers/core-concepts) — AT URIs and the Scribe data model

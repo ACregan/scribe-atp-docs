@@ -89,6 +89,10 @@ export default defineConfig({
                   slug: "developers/guides/social",
                 },
                 {
+                  label: "Cross-posted articles",
+                  slug: "developers/guides/cross-posted-articles",
+                },
+                {
                   label: "Engagement data",
                   slug: "developers/guides/engagement-data",
                 },
