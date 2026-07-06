@@ -26,6 +26,7 @@ The endpoint is publicly accessible from allowed origins (see [CORS](#cors-and-a
 | `action_type` | yes | `recommend`, `subscribe`, or `share` |
 | `publication_uri` | no | Filter to a specific site — AT URI of the `site.standard.publication` record |
 | `document_uri` | no | Filter to a specific article — AT URI of the `site.standard.document` record |
+| `origin` | no | Filter to events from a specific site origin, e.g. `https://norobots.blog` |
 | `from` | no | Start of window — ISO 8601 or relative (`-7d`, `-14d`, `-30d`) |
 | `to` | no | End of window — ISO 8601 or relative; defaults to now |
 | `group_by` | no | `document_uri`, `did`, or `day` |
@@ -129,12 +130,15 @@ For SSR frameworks, fetch counts in your route loader alongside the article to a
 ```ts
 // app/routes/blog.$slug.tsx — React Router v7
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const [article, likeCount] = await Promise.all([
-    fetchArticle('alice.bsky.social', 'https://alice.bsky.social', params.slug, request.signal),
-    fetch(
-      `https://social.scribe-atp.app/counts?action_type=recommend&document_uri=${encodeURIComponent(article.uri)}`
-    ).then((r) => r.json()).then((d) => d.count as number).catch(() => null),
-  ]);
+  const { article, uri: documentUri } = await fetchArticleBySlug(
+    'alice.bsky.social',
+    'https://alice.bsky.social',
+    params.slug,
+    request.signal,
+  );
+  const likeCount = await fetch(
+    `https://social.scribe-atp.app/counts?action_type=recommend&document_uri=${encodeURIComponent(documentUri)}`
+  ).then((r) => r.json()).then((d) => d.count as number).catch(() => null);
   return { article, likeCount };
 }
 ```
@@ -167,13 +171,69 @@ The endpoint is rate limited to **60 requests per minute per IP address**. Reque
 The AT URIs you need to pass as `publication_uri` or `document_uri` come from your site and article data:
 
 ```ts
-import { fetchSite, fetchArticle } from '@scribe-atp/core';
+import { fetchSite, fetchArticleBySlug } from '@scribe-atp/core';
 
 const site = await fetchSite('alice.bsky.social', 'https://alice.bsky.social');
 // site.uri → publication_uri
 
-const { article, uri: documentUri } = await fetchArticle('alice.bsky.social', 'https://alice.bsky.social', slug);
+const { article, uri: documentUri } = await fetchArticleBySlug('alice.bsky.social', 'https://alice.bsky.social', slug);
 // documentUri → document_uri
 ```
 
 See [Core Concepts](/developers/core-concepts) for more on AT URIs.
+
+## Author endpoint: `GET /events`
+
+```
+GET https://social.scribe-atp.app/events
+```
+
+This endpoint is protected — it requires an `Authorization: Bearer <NOTIFY_SECRET>` header (the same shared secret used for the `/notify` route). It is intended for the author's own tooling and analytics, not for reader-facing sites.
+
+Use it to query raw action event records for your own analytics dashboards or scripts.
+
+### Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `action_type` | yes | `recommend`, `subscribe`, or `share` |
+| `publication_uri` | no | Filter by publication AT URI |
+| `document_uri` | no | Filter by document AT URI |
+| `did` | no | Filter by reader DID |
+| `from` | no | ISO 8601 or relative (`-7d`, `-14d`, `-30d`) |
+| `to` | no | ISO 8601 or relative; defaults to now |
+| `limit` | no | 1–100, default 50 |
+| `offset` | no | Default 0 |
+
+### Response
+
+```json
+{
+  "events": [
+    {
+      "action_type": "recommend",
+      "did": "did:plc:...",
+      "document_uri": "at://did:plc:.../site.standard.document/3mp...",
+      "publication_uri": "at://did:plc:.../site.standard.publication/3mp...",
+      "origin": "https://norobots.blog",
+      "created_at": 1782995765
+    }
+  ],
+  "total": 42
+}
+```
+
+### Example
+
+```ts
+// Who has liked a specific article?
+const res = await fetch(
+  `https://social.scribe-atp.app/events?action_type=recommend&document_uri=${encodeURIComponent(documentUri)}`,
+  { headers: { Authorization: `Bearer ${process.env.NOTIFY_SECRET}` } }
+);
+const { events, total } = await res.json();
+```
+
+<Aside type="caution">
+  `events` contain reader DIDs — personal identifiers tied to individual Bluesky accounts. Handle with care and do not expose this endpoint or its data publicly.
+</Aside>
