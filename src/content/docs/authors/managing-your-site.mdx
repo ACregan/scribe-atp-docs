@@ -67,6 +67,40 @@ With the prompt silenced, you can still notify subscribers at any time from the 
 
 Readers can unsubscribe by clicking the Subscribe button again on any page where it appears — it acts as a toggle. They are shown a confirmation before their subscription is removed. Every notification message also includes an unsubscribe link for readers who prefer that route.
 
+## Analytics
+
+Scribe CMS can show a pageview chart for your site on the Insights page, if you connect your site to your own Umami analytics account. This is entirely optional — nothing changes if you skip it, and it works with any Umami instance, whether it's your own self-hosted server or someone else's.
+
+### Connecting Umami
+
+1. Open your site in Scribe CMS and click **Configure**.
+2. Scroll to the **Analytics** section and click **Integrate with Umami**.
+3. Enter your Umami instance's details:
+   - **Base URL** — the address of your Umami instance (e.g. `https://analytics.example.com`)
+   - **Website ID** — found in your Umami dashboard under the website's settings
+   - **Username** and **Password** — your Umami login
+4. Click **Connect**. Scribe CMS checks the details immediately and confirms once connected, showing the name of the website it found.
+
+<Aside type="tip">
+  We recommend creating a separate, restricted Umami user just for this connection rather than using your main admin login — Umami lets you scope a user to view only the website you're tracking. That way, if this credential is ever compromised, the damage is limited.
+</Aside>
+
+Once connected, a **Pageviews** chart appears on the Insights page alongside your other site metrics.
+
+### Editing or disconnecting
+
+**To update your connection** (for example, after changing your Umami password): click **Edit** in the Analytics section and enter the new details. You only need to re-enter your password if it changed — leave it blank to keep the one already saved.
+
+**To disconnect:** click **Disconnect** and confirm. Your Pageviews chart stops appearing on Insights.
+
+<Aside type="caution">
+  Scribe CMS cannot retrieve a saved Umami password once it's stored — reconnecting later means entering it again.
+</Aside>
+
+### If something's not working
+
+If your Umami connection has a problem — a changed password, a deleted website, or an unreachable instance — Scribe CMS shows a warning naming the affected site when you visit Insights. Check the site's details in the Configure page's Analytics section to fix it.
+
 ## Multiple sites
 
 You can manage multiple sites from a single Scribe account. Each site has its own groups and articles, and each can power a different domain.
