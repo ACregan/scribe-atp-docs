@@ -1,6 +1,8 @@
 stages:
   - build
+  - verify
   - deploy
+  - smoke-test
 
 default:
   image: node:22
@@ -14,11 +16,7 @@ default:
       - node_modules/
   interruptible: true
 
-build:
-  stage: build
-  script:
-    - npm ci
-    - npm run build
+.build-rules: &build-rules
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
@@ -29,6 +27,40 @@ build:
         - "**/*.mjs"
         - "**/*.json"
         - ".gitlab-ci.yml"
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  <<: *build-rules
+
+# Blocking: validates internal navigation (links between pages, anchors) never
+# leaves the network — no dependency on third-party uptime, so it's safe to
+# gate merges on.
+link-check:internal:
+  stage: verify
+  needs: ["build"]
+  script:
+    - npm ci
+    - npm run link-check
+  <<: *build-rules
+
+# Non-blocking: also checks links out to third-party sites (GitHub, AT
+# Protocol spec docs, etc.). Surfaces rot without failing a docs MR over
+# someone else's outage.
+link-check:external:
+  stage: verify
+  needs: ["build"]
+  allow_failure: true
+  script:
+    - npm ci
+    - npm run link-check:external
+  <<: *build-rules
 
 deploy:
   stage: deploy
@@ -49,3 +81,16 @@ deploy:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: false
+
+# Runs automatically once the manual deploy job above completes — confirms
+# both scribe-atp.app and docs.scribe-atp.app actually came back up with real
+# content (not a stale cache, redirect loop, or default nginx page) rather
+# than just trusting that the SSH deploy script exited 0.
+smoke-test:
+  stage: smoke-test
+  before_script:
+    - command -v curl >/dev/null || ( apt-get update -y && apt-get install -y curl )
+  script:
+    - bash scripts/smoke-test.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
