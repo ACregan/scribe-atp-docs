@@ -27,7 +27,7 @@ Groups are ordered — you control how they appear in the navigation of any conn
 
 ## Articles
 
-An **Article** is a single piece of writing. An article can be assigned to multiple sites, but within each site it can only be placed in one group.
+An **Article** is a single piece of writing. An article belongs to at most one site at a time, and within that site it sits in exactly one group.
 
 Articles have:
 - A **title** and **description** (optional short summary)
@@ -46,18 +46,17 @@ Site: alice.example.com
     └── Article: Building a side project
 ```
 
-Within a site, each article sits in at most one group. The same article can appear in a different site — useful if you run multiple publications and want to cross-post a piece.
+Within a site, each article sits in exactly one group. If you run multiple publications, an article can only ever live on one of them at a time — to move it, publish it to the new site and it's automatically removed from the old one.
 
 ## Publication states
 
-Every article is in one of three states:
+Every article is in one of two states:
 
 | State | What it means |
 | ----- | ------------- |
 | **Draft** | The article exists but isn't associated with any site yet. Only you can see it in Scribe CMS. |
-| **Unpublished** | The article is associated with a site but not yet placed in a group. It won't appear on any website. |
-| **Published** | The article is in a group. It's live on any website connected to that site. |
+| **Published** | The article is assigned to a site and placed in a group, together, in one step. It's live on any website connected to that site. |
 
 <Aside type="tip">
-  Moving an article from Unpublished to Published is as simple as placing it in a group. Moving it back to Unpublished removes it from public view without deleting it.
+  Publishing and unpublishing are both one-step actions. Publish picks a site and a group at the same time. Unpublish removes the article from that site and group together, returning it to Draft — nothing is deleted, and you can publish it again at any time.
 </Aside>

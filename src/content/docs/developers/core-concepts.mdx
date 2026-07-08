@@ -49,7 +49,7 @@ Data on a PDS is organised into **collections** — namespaced buckets of record
 | Collection | Contains |
 | ---------- | -------- |
 | `site.standard.publication` | Site records (one per site the author manages) |
-| `site.standard.document` | Article records (draft, unpublished, and published) |
+| `site.standard.document` | Article records (draft and published) |
 
 Each record within a collection has an **rkey** (record key) — a unique identifier within that collection. For Scribe, both article and publication rkeys are opaque **TIDs** (e.g. `3mp4nd46xwr2h`) assigned by the AT Protocol. An article's human-readable slug is stored in the record's `path` field, not in the rkey.
 
@@ -74,7 +74,7 @@ A **Site** is an author's publication — the top-level container for all their 
 A Site carries:
 - Metadata: `title`, `description`, `url` (domain), `urlPrefix` (optional path prefix), `logoImageUrl`, `splashImageUrl`, `icon` (blob)
 - A list of **Groups** (published content)
-- A list of **ungrouped articles** (unpublished content)
+- A list of **ungrouped articles** — legacy field, kept for backwards compatibility with content predating the current publish flow; expect it to be empty for any site using the current Scribe CMS (see [Publication states](#publication-states))
 
 The `url` and `urlPrefix` together define where the site's content lives:
 
@@ -112,7 +112,7 @@ A **Group** is a named, ordered collection of articles within a Site — a secti
 
 ### Article
 
-An **Article** is a single piece of written content. All articles — whether draft, unpublished, or published — are stored in the `site.standard.document` collection. An article's publication state is determined entirely by whether it appears in a Site record (see [Publication states](#publication-states) below), not by which collection it lives in. It contains:
+An **Article** is a single piece of written content. All articles — whether draft or published — are stored in the `site.standard.document` collection. An article's publication state is determined entirely by whether it appears in a Site record's Groups (see [Publication states](#publication-states) below), not by which collection it lives in. An article is associated with at most one Site at a time. It contains:
 - `title`, `description`, `content` (full HTML), `textContent` (plain text), `path` (URL path), `coverImageUrl`
 - `tags` — optional array of author-defined freeform strings for categorisation
 - `contributors` — optional array of `ArticleContributor` objects (DID, role, displayName)
@@ -141,15 +141,18 @@ This avoids N+1 fetch patterns: you can render an article list from the Site rec
 
 ## Publication states
 
-Every article is in one of three states:
+Every article is in one of two states:
 
 | State | Condition | What it means |
 | ----- | --------- | ------------- |
 | **Draft** | Exists on the author's PDS; not referenced in any Site record | The author hasn't associated it with any site yet |
-| **Unpublished** | Referenced in a Site's `ungroupedArticles` | Belongs to a site but not yet placed in a Group |
-| **Published** | Referenced in a Group within a Site | Has a canonical URL on the author's consumer site |
+| **Published** | Referenced in a Group within a Site | Has a canonical URL on the author's consumer site, assigned to that site and placed in a group in one step |
 
-The SDK returns ungrouped articles as `site.ungroupedArticles` and published articles inside `site.groups[n].articles`. How you present each state is up to you.
+The SDK returns published articles inside `site.groups[n].articles`. Drafts are never returned by `fetchSite` at all — since a draft isn't referenced by any Site record, there's nothing for the SDK to find it by.
+
+<Aside type="note">
+  `site.ungroupedArticles` still exists on the `Site` type for backwards compatibility with content published before this two-state model, but current Scribe CMS versions never write to it — expect an empty array. Don't build UI around it for new integrations.
+</Aside>
 
 ---
 
