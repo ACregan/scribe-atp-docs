@@ -70,15 +70,18 @@ For Authors / Site Owners
 - **No AT Protocol jargon in the Authors section.** DIDs, PDSes, XRPC — none of it. Authors need to know Sites, Groups, and Articles only.
 - **Core Concepts comes before Framework Guides** in the Developer section. Developers must understand the data model before reading code examples.
 - **API Reference is hand-written** — no TypeDoc auto-generation. Fixes to reference pages are committed here and deploy independently of the SDK.
-- Use the canonical terms from `scribe-atp-sdk/UBIQUITOUS_LANGUAGE.md` and `scribe-atp.app/UBIQUITOUS_LANGUAGE.md` throughout. Key terms: Site, Group, Article, ArticleRef, Owner, Contributor, Draft, Unpublished, Published.
+- Use the canonical terms from `scribe-atp-sdk/UBIQUITOUS_LANGUAGE.md` and `scribe-atp.app/UBIQUITOUS_LANGUAGE.md` throughout. Key terms: Site, Group, Article, ArticleRef, Owner, Contributor, Draft, Published.
 
-## Publication states (important — reflects updated model)
+## Publication states (important — reflects ADR 0013, 2026-07-08)
+
+**Two states, not three.** The CMS used to have an intermediate "Unpublished" state (assigned to a site but not yet placed in a group). That state was removed — assigning an article to a site and placing it in a group now happen together, in one Publish action. Don't describe a separate assign-then-group-later flow anywhere in the authors docs; it no longer exists in the UI.
 
 | State | Condition | Use in docs |
 | ----- | --------- | ----------- |
-| Draft | Article on PDS, not in any Site record | "Draft article" |
-| Unpublished | Article in a Site's `ungroupedArticles` | "Unpublished article" |
-| Published | Article in a Site's Group | "Published article" |
+| Draft | Article on PDS, not associated with any Site | "Draft article" |
+| Published | Article in a Site's Group (assigned and grouped together, via Publish) | "Published article" |
+
+Internally the codebase calls the Draft state "loose" (see `scribe-atp.app`'s ADR 0013) — keep using **Draft** in author-facing docs per the no-jargon rule above; "loose" is an implementation term, not something authors should see.
 
 ## Deployment
 
