@@ -25,7 +25,7 @@ The components need AT URIs — stable identifiers that point to specific AT Pro
 Your article page loader should fetch both. The exact approach depends on your framework:
 
 <Tabs>
-  <TabItem label="React Router v7">
+  <TabItem label="React Router v7/v8">
     `createArticleRouteLoader` returns `documentUri` alongside the article. Fetch the site separately to get the publication URI:
 
     ```ts
@@ -211,7 +211,7 @@ On SSR frameworks, `LikeButton` and `SubscribeButton` initialise in their unconf
 Pass `defaultLiked` / `defaultSubscribed` to set the initial state at render time and skip the `localStorage` read on mount:
 
 ```tsx
-// app/routes/blog.$slug.tsx — React Router v7 loader
+// app/routes/blog.$slug.tsx — React Router v7/v8 loader
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = parseCookies(request.headers.get("Cookie") ?? "");
   return {
