@@ -128,7 +128,7 @@ const { groups } = await res.json();
 For SSR frameworks, fetch counts in your route loader alongside the article to avoid client-side waterfalls:
 
 ```ts
-// app/routes/blog.$slug.tsx — React Router v7
+// app/routes/blog.$slug.tsx — React Router v7/v8
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { article, uri: documentUri } = await fetchArticleBySlug(
     'alice.bsky.social',

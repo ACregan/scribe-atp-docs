@@ -37,7 +37,7 @@ Only read on if you are using `@scribe-atp/core` directly.
 Pass `request.signal` directly from the incoming request:
 
 ```ts
-// React Router v7
+// React Router v7/v8
 export async function loader({ request }: LoaderFunctionArgs) {
   return fetchSite('alice.bsky.social', 'https://alice.bsky.social', request.signal);
 }
