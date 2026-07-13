@@ -71,6 +71,33 @@ Fetches a single article record (including full HTML content) directly by slug. 
 
 ---
 
+### `fetchProfile`
+
+```ts
+function fetchProfile(
+  handleOrDid: string,
+  signal?: AbortSignal
+): Promise<Profile>
+```
+
+Fetches a Bluesky profile — display name, avatar, bio, and related profile data — for a handle or DID. Calls the public, unauthenticated `app.bsky.actor.getProfile` endpoint directly; unlike `fetchSite` and `fetchArticle`, no PDS resolution step is needed since Bluesky's AppView resolves either a handle or a DID itself.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `handleOrDid` | `string` | Bluesky handle (`alice.bsky.social`) or DID (`did:plc:…`) |
+| `signal` | `AbortSignal` | Optional. Cancel the request when the signal fires |
+
+Use this to resolve the profile of an `ArticleContributor` for display — e.g. rendering an author byline card per `Writer`-role contributor on an article, falling back to the site owner's own profile when there are none.
+
+```ts
+const writers = article.contributors?.filter((c) => c.role === "Writer") ?? [];
+const profiles = writers.length > 0
+  ? await Promise.all(writers.map((w) => fetchProfile(w.did, signal)))
+  : [await fetchProfile(SITE_AUTHOR, signal)];
+```
+
+---
+
 ### `resolvePublicationUri`
 
 ```ts
@@ -356,6 +383,68 @@ interface ArticleContributor {
   did: string;           // AT Protocol DID of the contributor
   role?: string;         // e.g. "author", "editor", "illustrator"
   displayName?: string;  // Human-readable name
+}
+```
+
+### `Profile`
+
+Returned by `fetchProfile`. Mirrors Bluesky's `app.bsky.actor.defs#profileViewDetailed` shape.
+
+```ts
+interface Profile {
+  did: string;
+  handle: string;
+  displayName?: string;
+  description?: string;
+  avatar?: string;
+  banner?: string;
+  pronouns?: string;
+  website?: string;
+  followersCount?: number;
+  followsCount?: number;
+  postsCount?: number;
+  createdAt?: string;               // ISO 8601
+  associated?: ProfileAssociated;
+  pinnedPost?: { uri: string; cid: string };
+  verification?: ProfileVerification;
+  status?: ProfileStatus;
+}
+```
+
+### `ProfileAssociated`
+
+```ts
+interface ProfileAssociated {
+  lists?: number;
+  feedgens?: number;
+  starterPacks?: number;
+  labeler?: boolean;
+}
+```
+
+### `ProfileVerification`
+
+```ts
+interface ProfileVerification {
+  verifiedStatus: string;
+  trustedVerifierStatus: string;
+  verifications: Array<{
+    issuer: string;
+    uri: string;
+    isValid: boolean;
+    createdAt: string;
+  }>;
+}
+```
+
+### `ProfileStatus`
+
+```ts
+interface ProfileStatus {
+  status: string;
+  expiresAt?: string;
+  isActive?: boolean;
+  isDisabled?: boolean;
 }
 ```
 
