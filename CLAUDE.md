@@ -61,7 +61,7 @@ For Authors / Site Owners
 ├── The Content Model     ← Sites, Groups, Articles — no AT Protocol jargon
 ├── Getting Started
 ├── Managing Your Site
-├── Contributors          ← thin until invitation flow is built
+├── Contributors          ← invite/accept, submit-for-review, and Site Chat, all shipped
 └── Using a Website       ← hand-off guide: what to ask a developer for
 ```
 

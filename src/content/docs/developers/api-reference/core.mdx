@@ -376,7 +376,7 @@ interface Article {
 
 ### `ArticleContributor`
 
-Additional contributors on a published article. Populated via Scribe CMS when the contributor invitation flow is in place; an empty array is written on first publish.
+Additional credited contributors on an article's byline — added manually per-article from the article editor (e.g. crediting an editor or illustrator alongside the author). Distinct from Scribe CMS's separate site-level Contributor feature (an author invited to submit articles to someone else's site) — this array is not populated by that flow. An empty array is written on first publish if no contributors were added.
 
 ```ts
 interface ArticleContributor {
