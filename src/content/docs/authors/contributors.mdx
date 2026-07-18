@@ -5,23 +5,52 @@ description: Adding other authors to your site as contributors.
 
 import { Aside } from '@astrojs/starlight/components';
 
-<Aside>
-  Contributor invitations are coming in a future release. This page will be updated when the feature ships.
-</Aside>
-
-A **Contributor** is another Scribe author who can write articles for your site. Contributors can create and edit articles under your site, but you remain the Site Owner — only you can manage site settings, create and rename groups, and invite or remove contributors.
+A **Contributor** is another Scribe author who can write and submit articles for your site. Contributors keep full ownership of what they write — their articles live on their own account, not yours — but you remain the Site Owner: only you can manage site settings, create and rename groups, approve or reject submissions, and invite or remove contributors.
 
 ## What contributors can do
 
 | Action | Owner | Contributor |
 | ------ | ----- | ----------- |
-| Write and edit articles | ✓ | ✓ |
-| Publish articles to a group | ✓ | ✓ |
+| Write articles | ✓ | ✓ (on their own account) |
+| Submit an article to your site for review | — | ✓ |
+| Approve or reject a submission | ✓ | — |
+| Publish an article directly to a group | ✓ | — |
+| View the site's groups and articles | ✓ | ✓ (read-only) |
+| Edit or view their own submitted articles | ✓ | ✓ |
 | Create and rename groups | ✓ | — |
 | Change site settings | ✓ | — |
-| Invite contributors | ✓ | — |
-| Remove contributors | ✓ | — |
+| Chat with the site's other contributors | ✓ | ✓ |
+| Invite or remove contributors | ✓ | — |
 
-## Coming soon
+## Inviting a contributor
 
-The contributor invitation flow is planned for a future release. When it ships, you'll be able to invite anyone with a Bluesky account to contribute to your site directly from Scribe CMS.
+1. Open your site in Scribe CMS and go to its **Groups & Articles** page.
+2. Click **Invite Contributor**.
+3. Enter the person's Bluesky handle (e.g. `alice.bsky.social`) and click **Look up**.
+4. Once Scribe finds their profile, click **Send Invite**.
+
+The invitation is sent as a Bluesky direct message with a link back to Scribe CMS, and also shows up automatically the next time they log in.
+
+## Accepting or declining an invitation
+
+If someone invites you to contribute to their site, you'll see an invitation prompt the next time you log in to Scribe CMS, naming the site and its owner. Click **Accept** to join, or **Reject** to decline. There's no obligation — declining doesn't notify the site owner of a reason, and you can be invited again later if circumstances change.
+
+Once you accept, the site appears in your own **Dashboard**, **Sites**, and **Groups** pages, marked with a **Contributor** badge so you can always find your way back to it alongside your own sites.
+
+## Writing and submitting articles
+
+Write your article as normal — it starts as a Draft on your own account, exactly like any other article you write. When it's ready, use **Submit to Site** instead of Publish, and choose which site you're submitting it to from your list of contributor sites.
+
+The site owner sees it appear in their **Submissions** queue and decides whether to approve it (choosing which group it's published into) or reject it. You'll be notified of the outcome. A rejected article stays as your Draft — nothing is lost, and you can edit and resubmit it, or submit it elsewhere.
+
+<Aside type="tip">
+  You can also browse a contributor site's existing groups and articles at any time (read-only) — useful for seeing what's already been covered before you start writing.
+</Aside>
+
+## Talking with your contributors
+
+Once a site has at least one accepted contributor, a **Discussion** panel appears alongside its Groups & Articles page — a chat between the site owner and every accepted contributor, for coordinating on submissions, deadlines, or anything else. It works like any other message you'd send on Bluesky, just without needing to leave Scribe.
+
+## Removing a contributor
+
+Open your site's **Groups & Articles** page and click **Remove** next to their name in the Contributors list. This immediately revokes their access to the site's management page and the Discussion panel. Articles they already had published remain published — removing a contributor doesn't unpublish their past work.
