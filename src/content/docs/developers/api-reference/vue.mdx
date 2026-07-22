@@ -49,6 +49,60 @@ Fetches an article when the composable is called and aborts on unmount. Returns 
 
 ---
 
+### `useScribePublicationUri`
+
+```ts
+function useScribePublicationUri(
+  author: string,
+  publicationUrl: string
+): UseScribePublicationUriResult
+
+interface UseScribePublicationUriResult {
+  uri: Ref<string | null>;
+  loading: Ref<boolean>;
+  error: Ref<Error | null>;
+}
+```
+
+Resolves just the AT URI of a site record — wraps `resolvePublicationUri` from `@scribe-atp/core` — without fetching the full `Site` object. Aborts on unmount.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+
+Use this when all you need is the AT URI to pass to `@scribe-atp/social`'s `SubscribeButton`, and fetching (and reacting to) the full site object would be wasted work.
+
+---
+
+### `useScribeDocumentUri`
+
+```ts
+function useScribeDocumentUri(
+  author: string,
+  publicationUrl: string,
+  articleSlug: string
+): UseScribeDocumentUriResult
+
+interface UseScribeDocumentUriResult {
+  uri: Ref<string | null>;
+  loading: Ref<boolean>;
+  error: Ref<Error | null>;
+}
+```
+
+Resolves just the AT URI of an article record — internally calls `fetchArticleBySlug` from `@scribe-atp/core` and keeps only the `uri`, discarding the article body. Aborts on unmount.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+| `articleSlug` | `string` | Article rkey / slug |
+
+Use this when all you need is the AT URI to pass to `@scribe-atp/social`'s `LikeButton` or `ShareButton`, typically alongside `useScribeArticle` when you're already rendering the full article elsewhere and don't want a second full fetch just for the URI.
+
+---
+
 ## Types
 
 All types from `@scribe-atp/core` are re-exported:

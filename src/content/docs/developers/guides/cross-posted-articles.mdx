@@ -68,6 +68,34 @@ function bskyPostUrl(atUri: string): string {
   The `cid` field in `bskyPostRef` is the content identifier for the post record. You do not need it to build the URL — it is available if you want to verify post integrity via the AT Protocol.
 </Aside>
 
+## Creating a cross-post yourself
+
+Everything above covers *reading* an existing `bskyPostRef` — the common case for a site that just displays Scribe content. If you're building your own publishing tool against the SDK (rather than using Scribe CMS's own "Share to Bluesky" action), `@scribe-atp/core` exports `crossPostToBluesky` for creating the post in the first place.
+
+This needs an authenticated AT Protocol agent for the author's own account — it's the one write operation in an otherwise read-only SDK.
+
+```ts
+import { crossPostToBluesky, buildCanonicalUrl } from '@scribe-atp/core';
+
+const ref = await crossPostToBluesky(agent, {
+  did: authorDid,
+  documentUri: article.uri,
+  documentCid: article.cid,
+  publicationUri: site.uri,
+  publicationCid: site.cid,
+  canonicalUrl: buildCanonicalUrl(article, site),
+  title: article.title,
+  text: `New post: ${article.title}`,
+  description: article.description,
+});
+
+// ref → { uri: "at://did:plc:.../app.bsky.feed.post/3mp...", cid: "..." }
+// Write ref to the article's bskyPostRef field yourself if your tool
+// should be able to render the "View discussion" link afterward.
+```
+
+See the [API reference](/developers/api-reference/core#crossposttobluesky) for the full `CrossPostParams` shape.
+
 ## See also
 
 - [Social interactions](/developers/guides/social) — LikeButton, ShareButton, and SubscribeButton components

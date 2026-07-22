@@ -3,6 +3,8 @@ title: "@scribe-atp/social"
 description: API reference for @scribe-atp/social — React Like, Share, and Subscribe buttons backed by AT Protocol OAuth.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 ## Components
 
 ### `LikeButton`
@@ -161,17 +163,11 @@ Persists a subscribed state to `localStorage`.
 
 ---
 
-### `clearSubscribed`
+All four storage functions above are SSR-safe — `localStorage` access is wrapped in a try/catch. They return `false` / do nothing when called in environments where `localStorage` is unavailable.
 
-```ts
-function clearSubscribed(publicationUri: string): void
-```
-
-Removes the subscribed state from `localStorage` for the given publication. Called automatically after a confirmed unsubscription via `SubscribeButton`.
-
----
-
-All five storage functions are SSR-safe — `localStorage` access is wrapped in a try/catch. They return `false` / do nothing when called in environments where `localStorage` is unavailable.
+<Aside type="note">
+  A fifth function, `clearSubscribed`, exists internally and is called automatically by `SubscribeButton` after a confirmed unsubscription — but it isn't exported from the package's public API. If you're building your own unsubscribe UI outside `SubscribeButton`, note that `markSubscribed` won't help here (it only sets the subscribed state, not clears it) — you'll need to track unsubscribed state with your own `localStorage` key for now.
+</Aside>
 
 ---
 

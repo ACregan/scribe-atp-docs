@@ -66,6 +66,10 @@ export default defineConfig({
                 { label: "Vue", slug: "developers/framework-guides/vue" },
                 { label: "Nuxt", slug: "developers/framework-guides/nuxt" },
                 {
+                  label: "Styles",
+                  slug: "developers/framework-guides/styles",
+                },
+                {
                   label: "Other frameworks",
                   slug: "developers/framework-guides/other",
                 },

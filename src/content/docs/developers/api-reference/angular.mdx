@@ -82,6 +82,53 @@ Injection function (must be called in an injection context). Fetches an article 
 
 ---
 
+### `injectPublicationUri`
+
+```ts
+function injectPublicationUri(author: string, publicationUrl: string): {
+  uri: Signal<string | null>;
+  loading: Signal<boolean>;
+  error: Signal<Error | null>;
+}
+```
+
+Injection function. Resolves just the AT URI of a site record — wraps `resolvePublicationUri` from `@scribe-atp/core` — without fetching the full `Site` object. The request is aborted when the host component is destroyed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+
+Use this when all you need is the AT URI to pass to `@scribe-atp/social`'s `SubscribeButton`, and fetching (and re-rendering on) the full site object would be wasted work.
+
+---
+
+### `injectDocumentUri`
+
+```ts
+function injectDocumentUri(
+  author: string,
+  publicationUrl: string,
+  articleSlug: string
+): {
+  uri: Signal<string | null>;
+  loading: Signal<boolean>;
+  error: Signal<Error | null>;
+}
+```
+
+Injection function. Resolves just the AT URI of an article record — internally calls `fetchArticleBySlug` from `@scribe-atp/core` and returns only the `uri`, discarding the article body. The request is aborted when the host component is destroyed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `author` | `string` | Author handle or DID |
+| `publicationUrl` | `string` | The site's canonical HTTPS URL |
+| `articleSlug` | `string` | Article rkey / slug |
+
+Use this when all you need is the AT URI to pass to `@scribe-atp/social`'s `LikeButton` or `ShareButton`, typically alongside `injectArticle` when you're already rendering the full article elsewhere and don't want a second full fetch just for the URI.
+
+---
+
 ## Types
 
 All types from `@scribe-atp/core` are re-exported:

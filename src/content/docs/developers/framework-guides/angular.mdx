@@ -134,6 +134,32 @@ Injection functions return `{ site, loading, error }` as readonly signals. The f
   Injection functions must be called in an **injection context** — inside a constructor or class field initialiser. They cannot be called inside lifecycle hooks or event handlers.
 </Aside>
 
+## Just the AT URI — `injectPublicationUri` / `injectDocumentUri`
+
+`@scribe-atp/social`'s `LikeButton`, `SubscribeButton`, and `ShareButton` are React components, so they aren't directly usable from an Angular template — but if you're building your own like/subscribe UI against the AT Protocol yourself (or linking out to a Bluesky embed), `injectPublicationUri` and `injectDocumentUri` resolve just the AT URI without fetching (or re-rendering on) the full site/article object:
+
+```ts
+import { Component } from '@angular/core';
+import { NgIf } from '@angular/common';
+import { injectArticle, injectDocumentUri } from '@scribe-atp/angular';
+
+@Component({
+  standalone: true,
+  imports: [NgIf],
+  template: `
+    <article *ngIf="article.article() as a">
+      <h1>{{ a.title }}</h1>
+      <div [innerHTML]="a.content"></div>
+    </article>
+    <p *ngIf="uri.uri() as documentUri">AT URI: {{ documentUri }}</p>
+  `,
+})
+export class ArticleComponent {
+  article = injectArticle('alice.bsky.social', 'my-first-post');
+  uri = injectDocumentUri('alice.bsky.social', 'https://alice.bsky.social', 'my-first-post');
+}
+```
+
 ## TypeScript types
 
 All types from `@scribe-atp/core` are re-exported from `@scribe-atp/angular`:

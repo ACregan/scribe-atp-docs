@@ -273,6 +273,8 @@ Returns a framework-neutral array of meta tag descriptors for an article page. C
 
 Pass the output to a framework adapter (`articleMeta` in `@scribe-atp/react-router-framework`, `articleMetadata` in `@scribe-atp/next`, `articleSeoMeta` in `@scribe-atp/nuxt`) or convert to your framework's format manually.
 
+Also includes a `{ "script:ld+json": ... }` tag generated internally via `generateArticleJsonLd` — you get JSON-LD structured data for free without calling it yourself. Use `generateArticleJsonLd` directly only if your framework's metadata API has no room for a raw `<script>` tag (e.g. Next.js's `Metadata` object) — see below.
+
 See the [Open Graph meta tags guide](/developers/guides/meta-tags) for framework-specific usage.
 
 ---
@@ -302,6 +304,109 @@ Derives the fully-qualified canonical URL for an article. Uses `article.canonica
 ```ts
 buildCanonicalUrl(article, site);
 // → "https://alice.bsky.social/blog/my-first-post"
+```
+
+---
+
+### `buildSiteUrl`
+
+```ts
+function buildSiteUrl(site: Site): string
+```
+
+Derives the fully-qualified URL for a site's index page from `site.url` and `site.urlPrefix`.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
+
+```ts
+buildSiteUrl(site);
+// → "https://alice.bsky.social/blog"
+```
+
+---
+
+### `generateArticleJsonLd`
+
+```ts
+function generateArticleJsonLd(article: Article, site: Site): JsonLdObject
+```
+
+Returns a [schema.org `BlogPosting`](https://schema.org/BlogPosting) object as a plain, JSON-serializable value — headline, publish/modified dates, author, publisher, and (when present) description, image, and keywords. `generateArticleMeta` already calls this internally and includes the result as a `script:ld+json` tag, so most consumers never need to call it directly.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `article` | `Article` | The full article object |
+| `site` | `Site` | The site object |
+
+Call this directly when your framework's metadata API has no place for a raw `<script>` tag and you need to render the JSON-LD `<script type="application/ld+json">` element yourself. `@scribe-atp/next`'s adapter needs this for exactly that reason — but note that `generateArticleJsonLd` isn't currently re-exported from `@scribe-atp/next` itself, so import it from `@scribe-atp/core` directly even in a Next.js project:
+
+```ts
+import { generateArticleJsonLd } from '@scribe-atp/core';
+
+// in your page component
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{ __html: JSON.stringify(generateArticleJsonLd(article, site)) }}
+/>
+```
+
+---
+
+### `generateSiteJsonLd`
+
+```ts
+function generateSiteJsonLd(site: Site): JsonLdObject
+```
+
+Returns a [schema.org `WebSite`](https://schema.org/WebSite) object — name, URL, and description if present. Same standalone-use case as `generateArticleJsonLd` above; not called automatically by `generateSiteMeta`'s `WebSite` type (only articles get automatic JSON-LD via `generateArticleMeta`).
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `site` | `Site` | The site object |
+
+---
+
+## Writing content
+
+Every function above is a read — no authentication required. `crossPostToBluesky` is the one exception: it writes a record to the AT Protocol, so it needs an authenticated agent.
+
+### `crossPostToBluesky`
+
+```ts
+function crossPostToBluesky(
+  agent: AtpAgentLike,
+  params: CrossPostParams
+): Promise<StrongRef>
+```
+
+Creates an `app.bsky.feed.post` with a rich link-card embed pointing at the article, plus `associatedRefs` linking the post back to the underlying `site.standard.document` and `site.standard.publication` records. This is what produces the Bluesky embed card and lets the [`bskyPostRef` field](/developers/guides/cross-posted-articles) be populated on the article record.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `agent` | `AtpAgentLike` | An authenticated AT Protocol agent exposing `com.atproto.repo.createRecord` — e.g. an `@atproto/api` `Agent` instance with a valid OAuth session for the author's own account |
+| `params` | `CrossPostParams` | See below |
+
+Returns a `StrongRef` (`{ uri, cid }`) pointing at the newly created post — write this to the article's `bskyPostRef` field yourself if you want readers of your own tooling to see the cross-post link.
+
+This is a low-level primitive for building your own publishing tool against the SDK — Scribe CMS already calls the equivalent logic server-side when an author uses its own "Share to Bluesky" action. Most SDK consumers (sites that only *display* Scribe content) will never call this.
+
+```ts
+import { crossPostToBluesky } from '@scribe-atp/core';
+
+const ref = await crossPostToBluesky(agent, {
+  did: authorDid,
+  documentUri: article.uri,
+  documentCid: article.cid,
+  publicationUri: site.uri,
+  publicationCid: site.cid,
+  canonicalUrl: buildCanonicalUrl(article, site),
+  title: article.title,
+  text: `New post: ${article.title}`,
+  description: article.description,
+});
+// ref → { uri: "at://did:plc:.../app.bsky.feed.post/3mp...", cid: "..." }
 ```
 
 ---
@@ -473,13 +578,55 @@ interface ArticleResult {
 
 ### `ScribeMetaTag`
 
-The output element type of `generateArticleMeta` and `generateSiteMeta`. A union of three tag shapes:
+The output element type of `generateArticleMeta` and `generateSiteMeta`. A union of five tag shapes:
 
 ```ts
 type ScribeMetaTag =
   | { title: string }
   | { name: string; content: string }
-  | { property: string; content: string };
+  | { property: string; content: string }
+  | { tagName: "link"; rel: string; href: string }
+  | { "script:ld+json": JsonLdObject };
 ```
 
-Framework adapters convert this to their own meta format. Consume it directly only if you're writing your own adapter or using a framework not covered by the existing packages.
+Framework adapters convert this to their own meta format. Consume it directly only if you're writing your own adapter or using a framework not covered by the existing packages. The `script:ld+json` variant is how `generateArticleMeta` delivers the JSON-LD structured data described under `generateArticleJsonLd` above.
+
+### `JsonLdObject`
+
+A plain, JSON-serializable object — matches the shape consuming frameworks' own JSON-LD types expect (e.g. React Router's `LdJsonObject`) without this package depending on any framework's types directly.
+
+```ts
+type JsonLdObject = {
+  [key: string]: string | number | boolean | null | JsonLdObject | JsonLdObject[];
+};
+```
+
+### `CrossPostParams`
+
+Input to `crossPostToBluesky`.
+
+```ts
+interface CrossPostParams {
+  did: string;              // The author's own DID — the repo the post is written to
+  documentUri: string;      // AT URI of the site.standard.document being cross-posted
+  documentCid: string;
+  publicationUri: string;   // AT URI of the owning site.standard.publication
+  publicationCid: string;
+  canonicalUrl: string;     // The article's canonical URL — becomes the link-card target
+  title: string;
+  text: string;             // The post's own text content
+  description?: string;
+  thumbBlob?: unknown;      // A pre-uploaded blob ref for the link-card thumbnail, if any
+}
+```
+
+### `StrongRef`
+
+An AT Protocol content-addressed reference — a URI plus the CID pinning it to a specific version of the record. Returned by `crossPostToBluesky`; also the shape of `Article.bskyPostRef`.
+
+```ts
+interface StrongRef {
+  uri: string;
+  cid: string;
+}
+```
