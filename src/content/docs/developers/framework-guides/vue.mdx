@@ -66,6 +66,29 @@ const { article, loading, error } = useScribeArticle(props.author, props.slug);
 </template>
 ```
 
+## Just the AT URI — `useScribePublicationUri` / `useScribeDocumentUri`
+
+`@scribe-atp/social`'s `LikeButton`, `SubscribeButton`, and `ShareButton` are React components, so they aren't directly usable from a Vue template — but if you're building your own like/subscribe UI against the AT Protocol yourself, `useScribePublicationUri` and `useScribeDocumentUri` resolve just the AT URI without fetching (or reacting to) the full site/article object:
+
+```vue
+<script setup lang="ts">
+import { useScribeArticle, useScribeDocumentUri } from '@scribe-atp/vue';
+
+const props = defineProps<{ author: string; publicationUrl: string; slug: string }>();
+const { article, loading } = useScribeArticle(props.author, props.slug);
+const { uri } = useScribeDocumentUri(props.author, props.publicationUrl, props.slug);
+</script>
+
+<template>
+  <p v-if="loading">Loading…</p>
+  <article v-else-if="article">
+    <h1>{{ article.title }}</h1>
+    <div v-html="article.content" />
+  </article>
+  <p v-if="uri">AT URI: {{ uri }}</p>
+</template>
+```
+
 ## TypeScript types
 
 All types from `@scribe-atp/core` are re-exported from `@scribe-atp/vue`:
