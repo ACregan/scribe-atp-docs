@@ -52,7 +52,7 @@ For Developers
 ├── Introduction
 ├── Core Concepts         ← AT Protocol model, then Scribe model (Site → Group → Article)
 ├── Quickstart            ← @scribe-atp/core, fetch a site + article in < 5 min
-├── Framework Guides      ← Core · React · React Router v7/v8 · Angular · Next.js · Vue · Nuxt · Other
+├── Framework Guides      ← Core · React · React Router v7/v8 · Angular · Next.js · Vue · Nuxt · Styles · Other
 ├── Guides                ← RSS · sitemaps · building URLs · request cancellation
 └── API Reference         ← hand-written, one page per package
 
