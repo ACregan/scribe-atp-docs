@@ -5,27 +5,37 @@ description: The typed errors @scribe-atp/core throws, and how to retry transien
 
 import { Aside } from '@astrojs/starlight/components';
 
-`fetchSite`, `fetchArticle`, `fetchArticleBySlug`, and `resolvePublicationUri` throw one of two typed errors, both exported from `@scribe-atp/core`:
+`fetchSite`, `fetchArticle`, `fetchArticleBySlug`, `resolvePublicationUri`, `listSites`, `listArticles`, and `fetchProfile` throw one of three typed errors, all exported from `@scribe-atp/core`:
 
 | Error | Thrown when | Should you retry? |
 | ----- | ----------- | ------------------ |
 | `NotFoundError` | The fetch succeeded, but the site/article genuinely doesn't exist (bad slug, deleted record) | No — it will fail the same way every time |
-| `PdsFetchError` | Network failure, non-ok HTTP response, or handle/DID/PDS resolution failure | Yes — this is usually transient |
+| `PdsFetchError` | The PDS responded, but with a non-ok HTTP status. The service is up — this specific operation failed | Yes — this is usually transient |
+| `PdsUnreachableError` | The request never got a response at all — DNS failure, connection refused, timeout | Yes — but this suggests a broader outage, not just one bad request |
+
+`PdsUnreachableError` extends `PdsFetchError`, so an `instanceof PdsFetchError` check matches both — check `instanceof PdsUnreachableError` first if your UI wants to say something more specific than "couldn't load that" (e.g. "the service is down" vs. "something went wrong loading this").
 
 ```ts
-import { fetchSite, NotFoundError, PdsFetchError } from '@scribe-atp/core';
+import { fetchSite, NotFoundError, PdsFetchError, PdsUnreachableError } from '@scribe-atp/core';
 
 try {
   const site = await fetchSite(author, publicationUrl, signal);
 } catch (err) {
   if (err instanceof NotFoundError) {
     // show a 404 — retrying won't help
+  } else if (err instanceof PdsUnreachableError) {
+    // couldn't reach the PDS at all — safe to retry, but worth a
+    // distinct "service is down" message if your UI differentiates
   } else if (err instanceof PdsFetchError) {
-    // transient — safe to retry
+    // the PDS responded with an error — safe to retry
   }
   throw err;
 }
 ```
+
+<Aside>
+  Most consumers don't need the three-way split — a single "temporarily unavailable, try again" message covering both `PdsFetchError` and `PdsUnreachableError` is enough. Reach for `PdsUnreachableError` specifically when your UI benefits from telling "this record had trouble loading" apart from "the whole service is down" — e.g. a multi-tenant reader/browser app where a visitor needs to know whether it's worth trying a different page right now.
+</Aside>
 
 <Aside>
   A cancelled request still rejects with a plain `AbortError`, not one of the typed errors above — see [Request cancellation](/developers/guides/cancellation/).

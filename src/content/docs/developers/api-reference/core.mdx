@@ -455,7 +455,17 @@ class PdsFetchError extends Error {
 }
 ```
 
-Thrown for anything that looks transient: network failure, a non-ok HTTP response, or a handle/DID/PDS resolution failure. Safe to retry — see [`withRetry`](#withretry) and the [Errors and retries](/developers/guides/errors-and-retries/) guide.
+Thrown when a request reached the PDS but it responded with a non-ok HTTP status. The service is up — this specific operation failed. Safe to retry — see [`withRetry`](#withretry) and the [Errors and retries](/developers/guides/errors-and-retries/) guide.
+
+### `PdsUnreachableError`
+
+```ts
+class PdsUnreachableError extends PdsFetchError {
+  constructor(message: string, options?: { cause?: unknown });
+}
+```
+
+Thrown when a request never got a response at all — DNS failure, connection refused, timeout. Extends `PdsFetchError`, so an `instanceof PdsFetchError` check matches this too; check `instanceof PdsUnreachableError` first if your UI distinguishes "this record had trouble loading" from "the service is down." Safe to retry.
 
 ---
 
