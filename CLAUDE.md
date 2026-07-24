@@ -14,6 +14,7 @@ Both domains are served from this single repo. nginx routes subdomains to the sa
 ## Stack
 
 - **Astro** with **Starlight** integration — static site generator purpose-built for docs
+- **@astrojs/sitemap** — sitemap generation (Starlight does not bundle this itself)
 - **MDX** — all doc pages use `.mdx` for component embedding flexibility
 - **TypeScript** — strict mode
 
@@ -82,6 +83,14 @@ For Authors / Site Owners
 | Published | Article in a Site's Group (assigned and grouped together, via Publish) | "Published article" |
 
 Internally the codebase calls the Draft state "loose" (see `scribe-atp.app`'s ADR 0013) — keep using **Draft** in author-facing docs per the no-jargon rule above; "loose" is an implementation term, not something authors should see.
+
+## Sitemap & robots.txt
+
+`@astrojs/sitemap` always names its output `sitemap-index.xml` — the `-index.xml` suffix is hardcoded in the integration, no config produces a bare `sitemap.xml`. That's a one-entry pointer file (`<sitemapindex><sitemap><loc>.../sitemap-0.xml</loc>`), not the actual URL list. A `postbuild` npm script (`cp dist/sitemap-0.xml dist/sitemap.xml`) copies the real chunk — the one that actually contains all `<url>` entries — to the conventional path instead, matching every consumer site in the fleet. Fine to rely on chunk 0 alone at this repo's scale (under `@astrojs/sitemap`'s 45,000-URL-per-chunk split threshold); if the docs corpus ever grows past that, this needs revisiting.
+
+`astro.config.mjs`'s `site:` is a single origin (`https://docs.scribe-atp.app`), but this repo serves two domains from one build (see Domains above) — the sitemap is scoped to `docs.scribe-atp.app` only. The 2-page `scribe-atp.app` marketing site (`index.astro`, `privacy.astro`) ends up in it too since those pages are technically served at that domain as well; deliberately not worth a second sitemap for 2 pages.
+
+`public/robots.txt` points `Sitemap:` at `/sitemap.xml`.
 
 ## Deployment
 

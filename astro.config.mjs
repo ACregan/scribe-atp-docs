@@ -105,6 +105,10 @@ export default defineConfig({
                   label: "Request cancellation",
                   slug: "developers/guides/cancellation",
                 },
+                {
+                  label: "Errors and retries",
+                  slug: "developers/guides/errors-and-retries",
+                },
               ],
             },
             {

@@ -1,0 +1,84 @@
+---
+title: Errors and retries
+description: The typed errors @scribe-atp/core throws, and how to retry transient PDS failures with withRetry.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`fetchSite`, `fetchArticle`, `fetchArticleBySlug`, and `resolvePublicationUri` throw one of two typed errors, both exported from `@scribe-atp/core`:
+
+| Error | Thrown when | Should you retry? |
+| ----- | ----------- | ------------------ |
+| `NotFoundError` | The fetch succeeded, but the site/article genuinely doesn't exist (bad slug, deleted record) | No — it will fail the same way every time |
+| `PdsFetchError` | Network failure, non-ok HTTP response, or handle/DID/PDS resolution failure | Yes — this is usually transient |
+
+```ts
+import { fetchSite, NotFoundError, PdsFetchError } from '@scribe-atp/core';
+
+try {
+  const site = await fetchSite(author, publicationUrl, signal);
+} catch (err) {
+  if (err instanceof NotFoundError) {
+    // show a 404 — retrying won't help
+  } else if (err instanceof PdsFetchError) {
+    // transient — safe to retry
+  }
+  throw err;
+}
+```
+
+<Aside>
+  A cancelled request still rejects with a plain `AbortError`, not one of the typed errors above — see [Request cancellation](/developers/guides/cancellation/).
+</Aside>
+
+## Retrying with `withRetry`
+
+`withRetry` wraps any of the fetch functions above with configurable retry-with-backoff. It's a generic helper — it doesn't know which function you're calling, so it works with `fetchSite`, `fetchArticle`, `fetchArticleBySlug`, or `resolvePublicationUri` equally.
+
+```ts
+function withRetry<T>(
+  fn: () => Promise<T>,
+  options?: {
+    attempts?: number;   // total attempts including the first — default 5
+    delaysMs?: number[]; // delay before each retry — default [300, 600, 1200, 2400]
+    signal?: AbortSignal;
+  }
+): Promise<T>
+```
+
+```ts
+import { fetchSite, withRetry } from '@scribe-atp/core';
+
+const site = await withRetry(() => fetchSite(author, publicationUrl, signal), { signal });
+```
+
+It never retries `NotFoundError` — retrying a genuine 404 just delays showing it. It also stops immediately if the passed `signal` is aborted, instead of continuing to retry a request nobody is waiting for anymore. Everything else is retried, including plain `Error`s thrown by code that predates the typed errors above.
+
+`withRetry` is opt-in — none of `@scribe-atp/core`'s fetch functions retry automatically. This matters for callers like build-time static-site generation (`@scribe-atp/next`'s `generateStaticParams`), where failing fast is usually preferable to eating several seconds of backoff during a build.
+
+## Pairing retries with a loading state
+
+`withRetry` only handles the retry loop — it doesn't know anything about your UI. In a server-rendered framework, the common pattern is to attempt the fetch once synchronously (so metadata/SEO tags stay available on the fast, successful path), and only fall back to a retrying, streamed fetch — paired with a loading spinner — if that first attempt fails:
+
+```ts
+// React Router v7/v8 framework mode
+export async function loader({ request }: Route.LoaderArgs) {
+  try {
+    const site = await fetchSite(author, publicationUrl, request.signal);
+    return { status: 'ok' as const, site };
+  } catch (err) {
+    if (err instanceof NotFoundError) throw new Response('Not found', { status: 404 });
+    // Stream the retries — don't await — so the page shell renders
+    // immediately and a <Suspense> fallback covers the wait.
+    return {
+      status: 'retrying' as const,
+      site: withRetry(() => fetchSite(author, publicationUrl, request.signal), {
+        attempts: 4,
+        signal: request.signal,
+      }),
+    };
+  }
+}
+```
+
+See your framework's guide for how to render a `Suspense`/`Await` fallback around the streamed promise, and an error boundary for when all retries are exhausted.
