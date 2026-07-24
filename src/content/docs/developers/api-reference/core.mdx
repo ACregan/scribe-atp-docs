@@ -120,6 +120,32 @@ Returns a string AT URI, e.g. `"at://did:plc:.../site.standard.publication/3mp4n
 
 ---
 
+### `withRetry`
+
+```ts
+function withRetry<T>(
+  fn: () => Promise<T>,
+  options?: {
+    attempts?: number;
+    delaysMs?: number[];
+    signal?: AbortSignal;
+  }
+): Promise<T>
+```
+
+Retries a failing async call with backoff. Generic — wraps `fetchSite`, `fetchArticle`, `fetchArticleBySlug`, `resolvePublicationUri`, or any other async function.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `fn` | `() => Promise<T>` | The call to retry, e.g. `() => fetchSite(author, publicationUrl, signal)` |
+| `options.attempts` | `number` | Total attempts including the first. Default `5` |
+| `options.delaysMs` | `number[]` | Delay in ms before each retry. Default `[300, 600, 1200, 2400]` |
+| `options.signal` | `AbortSignal` | Optional. Stops retrying immediately once aborted |
+
+Never retries `NotFoundError` or an aborted signal. Retries everything else, including plain `Error`s. Opt-in only — see [Errors and retries](/developers/guides/errors-and-retries/) for the full pattern, including pairing this with a loading state in server-rendered frameworks.
+
+---
+
 ### `listSites`
 
 ```ts
@@ -408,6 +434,28 @@ const ref = await crossPostToBluesky(agent, {
 });
 // ref → { uri: "at://did:plc:.../app.bsky.feed.post/3mp...", cid: "..." }
 ```
+
+---
+
+## Errors
+
+### `NotFoundError`
+
+```ts
+class NotFoundError extends Error {}
+```
+
+Thrown when a fetch succeeded but the site, publication, or article genuinely doesn't exist. Retrying will not help — treat it the same as an HTTP 404.
+
+### `PdsFetchError`
+
+```ts
+class PdsFetchError extends Error {
+  constructor(message: string, options?: { cause?: unknown });
+}
+```
+
+Thrown for anything that looks transient: network failure, a non-ok HTTP response, or a handle/DID/PDS resolution failure. Safe to retry — see [`withRetry`](#withretry) and the [Errors and retries](/developers/guides/errors-and-retries/) guide.
 
 ---
 
