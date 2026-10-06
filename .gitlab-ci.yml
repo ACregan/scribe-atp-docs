@@ -83,9 +83,10 @@ deploy:
       allow_failure: false
 
 # Runs automatically once the manual deploy job above completes — confirms
-# both scribe-atp.app and docs.scribe-atp.app actually came back up with real
-# content (not a stale cache, redirect loop, or default nginx page) rather
-# than just trusting that the SSH deploy script exited 0.
+# scribe-atp.app actually came back up with real content (not a stale cache,
+# redirect loop, or default nginx page) rather than just trusting that the SSH
+# deploy script exited 0, and that docs.scribe-atp.app still 301s to the
+# SkyScribe docs.
 smoke-test:
   stage: smoke-test
   before_script:
