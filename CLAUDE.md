@@ -7,9 +7,9 @@ Documentation site and project landing page for the Scribe ATP project. Built wi
 | Domain | Served from |
 | ------ | ----------- |
 | `scribe-atp.app` | Custom Starlight home page (`src/pages/index.astro`) — project landing page |
-| `docs.scribe-atp.app` | Starlight docs sidebar (`src/content/docs/`) |
+| `docs.scribe-atp.app` | **Nothing since 2026-10-06.** nginx 301s every URL to sdk.skyscribe.app or skyscribe.app |
 
-Both domains are served from this single repo. nginx routes subdomains to the same `dist/` output.
+**`docs.scribe-atp.app` is retired** (scribe-atp-sdk ADR 0003). The SDK docs now live at sdk.skyscribe.app (`scribe-atp-sdk/apps/docs`) and the author docs in skyscribe.app's User Guide. The nginx config (`vps-hosting`, `NGINX/docs.scribe-atp.app`) maps each old page to its new home with a 301, serves an allow-all `robots.txt`, and sends anything unmapped to the SDK docs home. Search Console has the change of address. Don't add content under `src/content/docs/`: nobody can reach it. The smoke test (`scripts/smoke-test.sh`) checks the 301s. `scribe-atp.app`, the landing page, is still served from this repo's `dist/`.
 
 ## Stack
 
