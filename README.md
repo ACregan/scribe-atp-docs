@@ -5,7 +5,7 @@ Documentation site and project landing page for the Scribe ATP project.
 | URL | Purpose |
 | --- | ------- |
 | `scribe-atp.app` | Project landing page — links to the CMS, docs, and SDK |
-| `docs.scribe-atp.app` | Documentation for developers and authors |
+| `docs.scribe-atp.app` | **Retired 2026-10-06.** Every URL 301s to its counterpart on [sdk.skyscribe.app](https://sdk.skyscribe.app) (developer docs) or skyscribe.app (author docs, privacy). The redirect is an nginx map in `vps-hosting` (`NGINX/docs.scribe-atp.app`) |
 
 Built with [Starlight](https://starlight.astro.build) (Astro).
 
@@ -13,7 +13,7 @@ Built with [Starlight](https://starlight.astro.build) (Astro).
 
 | Repo | Purpose |
 | ---- | ------- |
-| [`scribe-atp-sdk`](https://github.com/ACregan/scribe-atp-sdk) | `@scribe-atp/*` npm packages |
+| [`scribe-atp-sdk`](https://github.com/ACregan/scribe-atp-sdk) | The SkyScribe SDK, `@skyscribe-sdk/*` npm packages (formerly `@scribe-atp/*`, now deprecated), and its docs at sdk.skyscribe.app |
 | `scribe-atp.app` | Scribe CMS — the AT Protocol authoring tool |
 
 ## Commands
